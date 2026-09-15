@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pikachu">
+<meta name="theme-color" content="#16213A">
+<title>Pikachu · fuel log</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23F4C430'/%3E%3Ctext x='50' y='66' font-size='48' text-anchor='middle'%3E%E2%9B%BD%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23F4C430'/%3E%3Ctext x='90' y='118' font-size='86' text-anchor='middle'%3E%E2%9B%BD%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --ink: #16213A; --yellow: #F4C430; --slate: #6B7385; --red: #C8372D;
+    --bg: #EEF1F5; --line: #D2D8E2; --card: #fff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    -webkit-text-size-adjust: 100%; }
+  body { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  .wrap { max-width: 460px; margin: 0 auto; padding: 18px 16px 64px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .logo { width: 40px; height: 40px; border-radius: 50%; background: var(--yellow);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  header h1 { font-size: 20px; margin: 0; line-height: 1.15; }
+  header p { margin: 0; font-size: 14px; color: var(--slate); }
+
+  .panel { background: var(--ink); border-radius: 14px; padding: 12px 16px 6px; margin-bottom: 14px; }
+  .panel .cap { font-size: 12px; color: #AEB6C6; margin-bottom: 4px; }
+  .ro { display: flex; justify-content: space-between; align-items: baseline;
+    padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.10); }
+  .ro span:first-child { font-size: 14px; color: #AEB6C6; }
+  .ro span:last-child { font-size: 18px; font-weight: 500; color: #F5F7FA; }
+  .ro.big span:last-child { font-size: 30px; font-weight: 600; color: var(--yellow); }
+  .ro small { font-size: 12px; font-weight: 400; color: #AEB6C6; margin-left: 4px; }
+  .panel .foot { display: flex; justify-content: space-between; font-size: 12px; color: #AEB6C6; padding: 8px 0 4px; }
+
+  .hint { font-size: 14px; color: var(--slate); line-height: 1.35; margin: 0 0 14px; }
+
+  button { font: inherit; cursor: pointer; border: 0; -webkit-tap-highlight-color: transparent; }
+  .btn-add { width: 100%; display: flex; justify-content: space-between; align-items: center;
+    background: var(--yellow); color: var(--ink); border-radius: 14px; padding: 13px 16px;
+    font-weight: 500; font-size: 16px; margin-bottom: 12px; }
+  .btn-add span:last-child { font-size: 14px; }
+  .btn-primary { width: 100%; background: var(--ink); color: #fff; border-radius: 8px; padding: 12px; font-weight: 500; font-size: 16px; }
+  .btn-text { background: none; color: var(--slate); font-size: 14px; padding: 4px 0; display: inline-flex; gap: 6px; align-items: center; }
+  .btn-text.danger { color: var(--red); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .card h2 { font-size: 14px; margin: 0 0 8px; font-weight: 500; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .sect { font-size: 14px; font-weight: 500; margin: 14px 0 8px; }
+  label.f { display: block; }
+  label.f .lab { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  label.f .lab b { font-size: 14px; font-weight: 500; }
+  label.f .lab i { font-size: 12px; color: var(--slate); font-style: normal; }
+  input[type=text], input[type=date] { width: 100%; font: inherit; font-size: 16px; color: var(--ink);
+    padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
+    -webkit-appearance: none; appearance: none; font-variant-numeric: tabular-nums; min-height: 42px; }
+  label.chk { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 8px 0; }
+  label.chk input { width: 18px; height: 18px; accent-color: var(--ink); }
+  .err { color: var(--red); font-size: 14px; margin: 8px 0; }
+
+  .hist-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .hist-head h2 { font-size: 14px; margin: 0; font-weight: 500; }
+  .entry { background: var(--card); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 8px; overflow: hidden; }
+  .entry .top { width: 100%; text-align: left; background: none; padding: 12px 16px; color: var(--ink); }
+  .entry .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .entry .row.sub { font-size: 14px; color: var(--slate); margin-top: 2px; }
+  .entry .stats { display: flex; gap: 16px; font-size: 14px; margin-top: 6px; }
+  .entry .stats i { font-style: normal; color: var(--slate); }
+  .entry .stats .bad { color: var(--red); }
+  .entry .detail { border-top: 1px solid var(--bg); padding: 12px 16px 12px; font-size: 14px; }
+  .entry .detail .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+  .entry .detail .kv span:nth-child(odd) { color: var(--slate); }
+  .entry .detail .notes { color: var(--slate); margin-top: 8px; line-height: 1.35; }
+
+  .backup { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 18px; }
+  .foot-note { font-size: 12px; color: var(--slate); line-height: 1.4; margin-top: 18px; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0;
+    transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .chart svg { width: 100%; height: auto; display: block; }
+  .legend { font-size: 12px; color: var(--slate); margin-top: 6px; }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">⛽</div>
+    <div><h1>Pikachu</h1><p>2014 Ford Edge · fuel log</p></div>
+  </header>
+
+  <div class="panel" id="panel"></div>
+  <p class="hint" id="hint" hidden></p>
+
+  <button class="btn-add" id="toggleForm"><span>＋ Add fill-up</span><span id="chev">▾</span></button>
+
+  <div class="card" id="form" hidden>
+    <div class="grid2">
+      <label class="f"><span class="lab"><b>Date</b></span><input type="date" id="date"></label>
+      <label class="f"><span class="lab"><b>Station</b></span><input type="text" id="station" placeholder="Name or corner"></label>
+    </div>
+    <div class="sect">Receipt</div>
+    <div class="grid3">
+      <label class="f"><span class="lab"><b>$/L</b></span><input type="text" inputmode="decimal" id="pricePerL"></label>
+      <label class="f"><span class="lab"><b>Liters</b></span><input type="text" inputmode="decimal" id="liters" placeholder="58.068"></label>
+      <label class="f"><span class="lab"><b>Total $</b></span><input type="text" inputmode="decimal" id="total"></label>
+    </div>
+    <div class="sect">Dashboard (photo before pumping)</div>
+    <div class="grid2">
+      <label class="f"><span class="lab"><b>Odometer</b><i>km total</i></span><input type="text" inputmode="numeric" id="odometer" placeholder="196242"></label>
+      <label class="f"><span class="lab"><b>Viaje 1</b><i>km</i></span><input type="text" inputmode="decimal" id="tripKm" placeholder="793.0"></label>
+      <label class="f"><span class="lab"><b>Consumo med.</b><i>l/100 km</i></span><input type="text" inputmode="decimal" id="avgComputer" placeholder="10.5"></label>
+      <label class="f"><span class="lab"><b>Cons. combust.</b><i>L</i></span><input type="text" inputmode="decimal" id="computerLiters" placeholder="83.72"></label>
+      <label class="f"><span class="lab"><b>Dist. p/ vacío</b><i>km</i></span><input type="text" inputmode="numeric" id="distToEmpty" placeholder="60"></label>
+      <label class="f"><span class="lab"><b>Tiempo viaje</b><i>h:mm:ss</i></span><input type="text" id="tripTime" placeholder="17:03:03"></label>
+    </div>
+    <label class="chk"><input type="checkbox" id="fullTank" checked> Filled to full (pump clicked off)</label>
+    <label class="chk"><input type="checkbox" id="tripReset" checked> Viaje 1 was reset at the previous fill-up</label>
+    <label class="f"><span class="lab"><b>Notes</b></span><input type="text" id="notes" placeholder="Highway trip, AC all day…"></label>
+    <div class="err" id="err" hidden></div>
+    <button class="btn-primary" id="save" style="margin-top:10px">Save fill-up</button>
+  </div>
+
+  <div class="card chart" id="chartCard" hidden>
+    <h2>Consumption, real vs car computer</h2>
+    <div id="chart"></div>
+    <div class="legend">Yellow is what you actually paid for; dashed grey is what the dashboard claims.</div>
+  </div>
+
+  <div class="hist-head">
+    <h2>History</h2>
+    <button class="btn-text" id="copyCsv">⎘ Copy CSV for Excel</button>
+  </div>
+  <div id="history"></div>
+
+  <div class="backup">
+    <button class="btn-text" id="exportJson">⬇ Download backup (JSON)</button>
+    <button class="btn-text" id="importJson">⬆ Restore from backup</button>
+    <input type="file" id="fileIn" accept="application/json,.json" hidden>
+  </div>
+
+  <p class="foot-note">Data lives only on this phone. Real consumption is liters pumped over km driven between two full tanks (odometer if logged, otherwise Viaje 1). "Pump vs car" is liters the station charged minus liters the car says it burned since the last fill; a positive gap over about 5% is worth checking with PROFECO's Litro por Litro.</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const KEY = "pikachu-fuel-log-v1";
+  const SEED = [{
+    id: "seed-2026-09-14", date: "2026-09-14", station: "Next to home (Magna)",
+    pricePerL: 23.99, liters: 58.068, total: 1393.05, odometer: 196242, tripKm: 793,
+    avgComputer: 10.5, computerLiters: 83.72, distToEmpty: 60, tripTime: "17:03:03",
+    fullTank: true, tripReset: false,
+    notes: "Baseline. Viaje 1 was not reset at the previous fill (car says 83.72 L used, only 58.07 L fit), so no full-to-full number yet. Odometer approximate."
+  }];
+
+  // ---------- storage ----------
+  function load() {
+    try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    return null;
+  }
+  function save(list) {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); }
+    catch (e) { toast("Could not save. Storage may be full or blocked."); }
+  }
+  let entries = load();
+  if (!entries || !entries.length) { entries = SEED.slice(); save(entries); }
+
+  // ---------- math ----------
+  const n = v => (v === "" || v === null || v === undefined || isNaN(Number(v))) ? null : Number(v);
+  const fmt = (v, d = 2) => (v === null || v === undefined) ? "—" : Number(v).toFixed(d);
+  const money = v => (v === null || v === undefined) ? "—" :
+    "$" + Number(v).toLocaleString("en-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function compute(list) {
+    const sorted = list.slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+    return sorted.map((e, i) => {
+      const prev = i > 0 ? sorted[i - 1] : null;
+      const liters = n(e.liters);
+      const total = n(e.total) ?? (liters && n(e.pricePerL) ? liters * n(e.pricePerL) : null);
+      const price = n(e.pricePerL) ?? (liters && total ? total / liters : null);
+      let kmSince = null;
+      if (prev && n(e.odometer) && n(prev.odometer) && n(e.odometer) > n(prev.odometer)) kmSince = n(e.odometer) - n(prev.odometer);
+      else if (e.tripReset && n(e.tripKm)) kmSince = n(e.tripKm);
+      const fullToFull = !!(prev && e.fullTank && prev.fullTank && kmSince && liters);
+      const realL100 = fullToFull ? liters / kmSince * 100 : null;
+      const kmPerL = fullToFull ? kmSince / liters : null;
+      const costPerKm = fullToFull && total ? total / kmSince : null;
+      const pumpDiff = fullToFull && e.tripReset && n(e.computerLiters) ? liters - n(e.computerLiters) : null;
+      const pumpDiffPct = pumpDiff !== null ? pumpDiff / n(e.computerLiters) * 100 : null;
+      const computerGap = realL100 !== null && n(e.avgComputer) ? n(e.avgComputer) - realL100 : null;
+      return Object.assign({}, e, { total, price, kmSince, fullToFull, realL100, kmPerL, costPerKm, pumpDiff, pumpDiffPct, computerGap });
+    });
+  }
+
+  // ---------- helpers ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  let toastTimer;
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1800); }
+  const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+
+  let expanded = null;
+
+  // ---------- render ----------
+  function render() {
+    const rows = compute(entries);
+    const latest = rows.length ? rows[rows.length - 1] : null;
+    const lastReal = rows.slice().reverse().find(r => r.realL100 !== null) || null;
+    const spent = rows.reduce((s, r) => s + (r.total || 0), 0);
+    const liters = rows.reduce((s, r) => s + (n(r.liters) || 0), 0);
+
+    const pump = lastReal && lastReal.pumpDiff !== null
+      ? (lastReal.pumpDiff > 0 ? "+" : "") + fmt(lastReal.pumpDiff, 2) + "<small>L (" + fmt(lastReal.pumpDiffPct, 1) + "%)</small>"
+      : "—<small>L</small>";
+    $("panel").innerHTML =
+      '<div class="cap">' + (lastReal ? "Last full-to-full · " + esc(lastReal.date) : "No full-to-full reading yet") + '</div>' +
+      '<div class="ro big"><span>Real consumption</span><span class="num">' + fmt(lastReal && lastReal.realL100, 1) + '<small>l/100 km</small></span></div>' +
+      '<div class="ro"><span>Car\'s Consumo med.</span><span class="num">' + fmt(latest && n(latest.avgComputer), 1) + '<small>l/100 km</small></span></div>' +
+      '<div class="ro"><span>Cost per km</span><span class="num">' + money(lastReal && lastReal.costPerKm) + '</span></div>' +
+      '<div class="ro"><span>Pump vs car</span><span class="num">' + pump + '</span></div>' +
+      '<div class="foot"><span>' + rows.length + ' fill-up' + (rows.length === 1 ? "" : "s") + '</span><span class="num">' + liters.toFixed(1) + ' L · ' + money(spent) + '</span></div>';
+
+    const hint = $("hint");
+    hint.hidden = !!lastReal;
+    hint.textContent = "The real number appears after your next fill-up. At the pump: fill to full, log it here, then hold the trip stalk to reset Viaje 1 before driving off.";
+
+    // chart
+    const pts = rows.filter(r => r.realL100 !== null || n(r.avgComputer) !== null);
+    const cc = $("chartCard");
+    if (pts.length >= 2) { cc.hidden = false; $("chart").innerHTML = chartSvg(pts); } else cc.hidden = true;
+
+    // history
+    $("history").innerHTML = rows.slice().reverse().map(r => {
+      const open = expanded === r.id;
+      const pumpStat = r.pumpDiff !== null
+        ? '<span class="' + (Math.abs(r.pumpDiffPct) > 5 ? "bad" : "") + '"><i>pump </i>' + (r.pumpDiff > 0 ? "+" : "") + fmt(r.pumpDiff, 1) + ' L</span>' : "";
+      const gap = r.computerGap !== null ? (r.computerGap > 0 ? "+" : "") + fmt(r.computerGap, 1) + " l/100" : "—";
+      return '<div class="entry">' +
+        '<button class="top" data-id="' + esc(r.id) + '">' +
+          '<div class="row"><span><b>' + esc(r.date) + '</b></span><span class="num"><b>' + money(r.total) + '</b></span></div>' +
+          '<div class="row sub"><span>' + esc(r.station) + '</span><span class="num">' + fmt(n(r.liters), 2) + ' L @ ' + money(r.price) + '</span></div>' +
+          '<div class="stats num"><span><i>real </i>' + fmt(r.realL100, 1) + '</span><span><i>car </i>' + fmt(n(r.avgComputer), 1) + '</span><span><i>$/km </i>' + fmt(r.costPerKm, 2) + '</span>' + pumpStat + '</div>' +
+        '</button>' +
+        (open ? '<div class="detail"><div class="kv num">' +
+          '<span>Odometer</span><span>' + esc(r.odometer || "—") + ' km</span>' +
+          '<span>Viaje 1</span><span>' + esc(r.tripKm || "—") + ' km</span>' +
+          '<span>km since last fill</span><span>' + (r.kmSince ?? "—") + '</span>' +
+          '<span>Cons. combust.</span><span>' + esc(r.computerLiters || "—") + ' L</span>' +
+          '<span>Dist. p/ vacío</span><span>' + esc(r.distToEmpty || "—") + ' km</span>' +
+          '<span>Tiempo viaje</span><span>' + esc(r.tripTime || "—") + '</span>' +
+          '<span>km per liter</span><span>' + fmt(r.kmPerL, 2) + '</span>' +
+          '<span>Car vs real gap</span><span>' + gap + '</span>' +
+          '<span>Full tank</span><span>' + (r.fullTank ? "yes" : "no") + '</span>' +
+          '<span>Trip reset before</span><span>' + (r.tripReset ? "yes" : "no") + '</span>' +
+          '</div>' + (r.notes ? '<div class="notes">' + esc(r.notes) + '</div>' : "") +
+          '<button class="btn-text danger" data-del="' + esc(r.id) + '" style="margin-top:10px">🗑 Delete this fill-up</button></div>' : "") +
+      '</div>';
+    }).join("");
+  }
+
+  function chartSvg(pts) {
+    const W = 400, H = 170, L = 34, R = 10, T = 10, B = 26;
+    const vals = pts.flatMap(p => [p.realL100, n(p.avgComputer)]).filter(v => v !== null);
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    if (hi - lo < 1) { lo -= 1; hi += 1; } lo = Math.floor(lo) - 0.5; hi = Math.ceil(hi) + 0.5;
+    const x = i => L + (pts.length === 1 ? 0 : i * (W - L - R) / (pts.length - 1));
+    const y = v => T + (hi - v) * (H - T - B) / (hi - lo);
+    const path = key => { let d = "", on = false; pts.forEach((p, i) => { const v = key === "real" ? p.realL100 : n(p.avgComputer); if (v === null) return; d += (on ? " L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1); on = true; }); return d; };
+    let g = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Consumption trend">';
+    for (let v = Math.ceil(lo); v <= hi; v++) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '" stroke="#EEF1F5"/><text x="' + (L - 6) + '" y="' + (y(v) + 4).toFixed(1) + '" font-size="11" fill="#6B7385" text-anchor="end">' + v + '</text>';
+    g += '<path d="' + path("car") + '" fill="none" stroke="#6B7385" stroke-width="1.5" stroke-dasharray="4 3"/>';
+    g += '<path d="' + path("real") + '" fill="none" stroke="#F4C430" stroke-width="3" stroke-linejoin="round"/>';
+    pts.forEach((p, i) => { if (p.realL100 !== null) g += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.realL100).toFixed(1) + '" r="3.5" fill="#F4C430"/>'; g += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 8) + '" font-size="11" fill="#6B7385" text-anchor="middle">' + esc(p.date.slice(5)) + '</text>'; });
+    return g + "</svg>";
+  }
+
+  // ---------- form ----------
+  const fields = ["date", "station", "pricePerL", "liters", "total", "odometer", "tripKm", "avgComputer", "computerLiters", "distToEmpty", "tripTime", "notes"];
+  function resetForm() {
+    fields.forEach(f => $(f).value = "");
+    $("date").value = today(); $("station").value = "Next to home (Magna)"; $("pricePerL").value = "23.99";
+    $("fullTank").checked = true; $("tripReset").checked = true; $("err").hidden = true;
+  }
+  resetForm();
+
+  $("toggleForm").addEventListener("click", () => { const f = $("form"); f.hidden = !f.hidden; $("chev").textContent = f.hidden ? "▾" : "▴"; if (!f.hidden) $("liters").focus(); });
+  ["liters", "pricePerL"].forEach(id => $(id).addEventListener("input", () => { const l = n($("liters").value), p = n($("pricePerL").value); if (l && p) $("total").value = (l * p).toFixed(2); }));
+  $("total").addEventListener("input", () => { const l = n($("liters").value), t = n($("total").value); if (l && t) $("pricePerL").value = (t / l).toFixed(2); });
+
+  $("save").addEventListener("click", () => {
+    const e = { id: "e-" + Date.now() };
+    fields.forEach(f => e[f] = $(f).value.trim());
+    e.fullTank = $("fullTank").checked; e.tripReset = $("tripReset").checked;
+    const err = $("err");
+    if (!n(e.liters)) { err.textContent = "Liters loaded is required."; err.hidden = false; return; }
+    if (!n(e.total) && !n(e.pricePerL)) { err.textContent = "Enter the total charged or the price per liter."; err.hidden = false; return; }
+    if (!e.date) e.date = today();
+    entries.push(e); save(entries); resetForm(); $("form").hidden = true; $("chev").textContent = "▾";
+    render(); toast("Fill-up saved");
+  });
+
+  $("history").addEventListener("click", ev => {
+    const del = ev.target.closest("[data-del]");
+    if (del) { if (confirm("Delete this fill-up?")) { entries = entries.filter(e => e.id !== del.dataset.del); save(entries); expanded = null; render(); toast("Deleted"); } return; }
+    const top = ev.target.closest("[data-id]");
+    if (top) { expanded = expanded === top.dataset.id ? null : top.dataset.id; render(); }
+  });
+
+  // ---------- export / import ----------
+  function download(name, text, type) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function csv() {
+    const rows = compute(entries);
+    const head = ["date", "station", "price_per_l", "liters", "total_mxn", "odometer_km", "viaje_km", "consumo_med_l100", "cons_combust_l", "dist_vacio_km", "tiempo_viaje", "full_tank", "trip_reset", "real_l100", "km_per_l", "cost_per_km", "pump_minus_car_l", "notes"];
+    const q = s => '"' + String(s ?? "").replace(/"/g, '""') + '"';
+    return [head.join(",")].concat(rows.map(r => [r.date, q(r.station), fmt(r.price), r.liters, fmt(r.total), r.odometer, r.tripKm, r.avgComputer, r.computerLiters, r.distToEmpty, r.tripTime, r.fullTank, r.tripReset, fmt(r.realL100), fmt(r.kmPerL), fmt(r.costPerKm), fmt(r.pumpDiff), q(r.notes)].join(","))).join("\n");
+  }
+  $("copyCsv").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(csv()); toast("CSV copied"); }
+    catch (e) { download("pikachu-fuel-log.csv", csv(), "text/csv"); }
+  });
+  $("exportJson").addEventListener("click", () => download("pikachu-fuel-log-" + today() + ".json", JSON.stringify(entries, null, 2), "application/json"));
+  $("importJson").addEventListener("click", () => $("fileIn").click());
+  $("fileIn").addEventListener("change", ev => {
+    const file = ev.target.files[0]; if (!file) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const data = JSON.parse(rd.result);
+        if (!Array.isArray(data)) throw new Error();
+        const ids = new Set(entries.map(e => e.id));
+        let added = 0;
+        data.forEach(e => { if (e && e.id && !ids.has(e.id)) { entries.push(e); ids.add(e.id); added++; } });
+        save(entries); render(); toast(added + " fill-up" + (added === 1 ? "" : "s") + " restored");
+      } catch (e) { toast("That file is not a Pikachu backup."); }
+      ev.target.value = "";
+    };
+    rd.readAsText(file);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
