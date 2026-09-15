@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EEF1F5">
+<title>Quincena</title>
+<style>
+:root{
+  --bg:#EEF1F5; --paper:#FFFFFF; --ink:#14213D; --ink-2:#4B5568; --line:#D6DCE5;
+  --set:#0F766E; --set-soft:#D9F0EC; --spend:#B4432E; --spend-soft:#F6E1DC;
+  --income:#1D4ED8; --radius:14px;
+  --font:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.35;-webkit-font-smoothing:antialiased}
+body{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+header{padding:calc(14px + env(safe-area-inset-top)) 18px 6px}
+header h1{font-size:15px;font-weight:600;color:var(--ink-2);letter-spacing:.01em}
+header h1 span{color:var(--ink)}
+main{padding:0 14px}
+section{display:none}section.on{display:block}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+
+/* hero: quincena progress */
+.hero{padding:10px 4px 16px}
+.hero .big{font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1;color:var(--set)}
+.hero .of{font-size:15px;color:var(--ink-2);margin-top:6px}
+.track{height:8px;background:var(--line);border-radius:6px;margin-top:14px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--set);border-radius:6px;transition:width .35s ease}
+
+/* checklist */
+.check{background:var(--paper);border-radius:var(--radius);overflow:hidden}
+.check label{display:flex;align-items:center;gap:14px;padding:15px 16px;border-top:1px solid var(--line)}
+.check label:first-child{border-top:0}
+.check input{appearance:none;width:26px;height:26px;border:2px solid var(--line);border-radius:50%;flex:0 0 auto;display:grid;place-items:center;transition:background .15s,border-color .15s}
+.check input:checked{background:var(--set);border-color:var(--set)}
+.check input:checked::after{content:"";width:12px;height:7px;border:2.5px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.check input:focus-visible{outline:3px solid var(--income);outline-offset:2px}
+.check .t{flex:1}
+.check .t b{display:block;font-weight:600}
+.check .t small{color:var(--ink-2);font-size:13px}
+.check .amt{font-size:19px;font-weight:600}
+.check label.done .t b{color:var(--ink-2);text-decoration:line-through;text-decoration-color:var(--line)}
+
+/* fondos */
+h2{font-size:13px;font-weight:600;color:var(--ink-2);margin:22px 4px 8px}
+.fondo{background:var(--paper);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.fondo .t{flex:1}
+.fondo .t b{font-weight:600;display:block}
+.fondo .t small{color:var(--ink-2);font-size:13px}
+.fondo .saldo{font-size:19px;font-weight:600;color:var(--set)}
+.fondo .saldo.neg{color:var(--spend)}
+.blocks{display:flex;gap:4px;margin-top:8px}
+.blocks i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.blocks i.f{background:var(--set)}
+.fondo button.use{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:14px;font-weight:600}
+
+/* saldos */
+.saldos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.saldo-card{background:var(--paper);border-radius:var(--radius);padding:14px 16px}
+.saldo-card small{display:block;color:var(--ink-2);font-size:13px}
+.saldo-card b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:2px}
+.saldo-card .libre{font-size:13px;color:var(--set);margin-top:4px}
+
+/* movimientos */
+.form{background:var(--paper);border-radius:var(--radius);padding:14px 16px}
+.row{display:flex;gap:8px;margin-bottom:10px}
+.form input,.form select{flex:1;min-width:0;background:var(--bg);border:0;border-radius:10px;padding:12px 12px;font-size:16px}
+.form input:focus,.form select:focus{outline:2px solid var(--income)}
+.form .monto{font-size:30px;font-weight:700;letter-spacing:-.02em;text-align:right;padding:8px 12px}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;flex:1}
+.seg button{flex:1;padding:9px 0;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink-2)}
+.seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(20,33,61,.12)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips button{background:var(--bg);border-radius:20px;padding:7px 12px;font-size:14px}
+.chips button.on{background:var(--ink);color:#fff}
+.form .save{width:100%;background:var(--ink);color:#fff;border-radius:12px;padding:14px;font-size:16px;font-weight:600}
+.form .save.spend{background:var(--spend)}.form .save.set{background:var(--set)}.form .save.income{background:var(--income)}
+.list{background:var(--paper);border-radius:var(--radius);overflow:hidden;margin-top:10px}
+.mov{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line)}
+.mov:first-child{border-top:0}
+.mov .t{flex:1;min-width:0}
+.mov .t b{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mov .t small{color:var(--ink-2);font-size:13px}
+.mov .a{font-weight:600;white-space:nowrap}
+.mov .a.gasto{color:var(--spend)}.mov .a.traspaso{color:var(--set)}.mov .a.ingreso{color:var(--income)}
+.mov .x{color:var(--line);font-size:22px;padding:0 2px;line-height:1}
+.day{padding:10px 16px 4px;font-size:13px;color:var(--ink-2);background:var(--paper);border-top:1px solid var(--line)}
+.day:first-child{border-top:0}
+.empty{padding:28px 16px;color:var(--ink-2);text-align:center;font-size:15px}
+
+/* resumen */
+.bars{background:var(--paper);border-radius:var(--radius);padding:8px 16px 4px}
+.bar{padding:9px 0}
+.bar .l{display:flex;justify-content:space-between;font-size:15px;margin-bottom:5px}
+.bar .l b{font-weight:600}
+.bar .k{height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+.bar .k i{display:block;height:100%;background:var(--spend);border-radius:5px}
+.tot{display:flex;justify-content:space-between;padding:12px 4px 4px;font-size:15px;color:var(--ink-2)}
+.tot b{color:var(--ink);font-size:18px}
+.period{display:flex;gap:8px;margin:0 0 10px}
+
+/* ajustes */
+.ajuste{background:var(--paper);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px}
+.ajuste label{display:block;font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.ajuste input{width:100%;background:var(--bg);border:0;border-radius:10px;padding:12px;font-size:16px}
+.ajuste .btns{display:flex;gap:8px;margin-top:10px}
+.ajuste .btns button{flex:1;background:var(--bg);border-radius:10px;padding:12px;font-weight:600;font-size:14px}
+.ajuste .btns button.danger{color:var(--spend)}
+.note{font-size:13px;color:var(--ink-2);margin:10px 4px 0}
+
+/* tabs */
+nav{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+nav button{flex:1;padding:8px 0;font-size:12px;font-weight:600;color:var(--ink-2);border-radius:10px}
+nav button.on{color:var(--ink);background:var(--bg)}
+nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
+
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><h1 id="titulo"></h1></header>
+<main>
+
+<section id="tab-quincena" class="on">
+  <div class="hero">
+    <div class="big num" id="hero-num"></div>
+    <div class="of" id="hero-of"></div>
+    <div class="track"><i id="hero-bar"></i></div>
+  </div>
+  <div class="check" id="checklist"></div>
+  <h2>Saldos</h2>
+  <div class="saldos" id="saldos"></div>
+  <h2>Fondos apartados</h2>
+  <div id="fondos"></div>
+</section>
+
+<section id="tab-mov">
+  <div class="form">
+    <div class="row"><input class="monto num" id="f-monto" type="number" inputmode="decimal" placeholder="0" min="0" step="0.01"></div>
+    <div class="row">
+      <div class="seg" id="f-tipo">
+        <button data-v="gasto" class="on">Gasto</button>
+        <button data-v="ingreso">Ingreso</button>
+        <button data-v="traspaso">Traspaso</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="seg" id="f-cuenta">
+        <button data-v="santander" class="on">Santander</button>
+        <button data-v="bbva">BBVA</button>
+      </div>
+    </div>
+    <div class="chips" id="f-cat"></div>
+    <div class="row"><input id="f-nota" placeholder="Nota (opcional)"></div>
+    <div class="row"><input id="f-fecha" type="date"></div>
+    <button class="save spend" id="f-save">Guardar gasto</button>
+  </div>
+  <div class="list" id="movs"></div>
+</section>
+
+<section id="tab-resumen">
+  <div class="period"><div class="seg" id="r-per">
+    <button data-v="q" class="on">Esta quincena</button>
+    <button data-v="m">Este mes</button>
+    <button data-v="all">Todo</button>
+  </div></div>
+  <div class="bars" id="r-cats"></div>
+  <div class="tot"><span>Gastos del periodo</span><b class="num" id="r-total"></b></div>
+  <div class="tot"><span>Apartado a fondos</span><b class="num" id="r-set"></b></div>
+  <div class="tot"><span>Ingresos</span><b class="num" id="r-inc"></b></div>
+  <h2>Gasto por quincena</h2>
+  <div class="bars" id="r-hist"></div>
+</section>
+
+<section id="tab-ajustes">
+  <div class="ajuste">
+    <label for="s-san">Saldo inicial Santander (nómina)</label>
+    <input id="s-san" type="number" inputmode="decimal" placeholder="0">
+  </div>
+  <div class="ajuste">
+    <label for="s-bbva">Saldo inicial BBVA (ahorros)</label>
+    <input id="s-bbva" type="number" inputmode="decimal" placeholder="0">
+    <p class="note">Los saldos iniciales son el punto de partida: pon lo que tienes hoy en cada cuenta y a partir de ahí la app lleva la cuenta con tus movimientos.</p>
+  </div>
+  <div class="ajuste">
+    <label>Categorías de gasto (separadas por coma)</label>
+    <input id="s-cats">
+  </div>
+  <div class="ajuste">
+    <label>Respaldo</label>
+    <div class="btns">
+      <button id="s-export">Exportar JSON</button>
+      <button id="s-import">Importar JSON</button>
+      <input id="s-file" type="file" accept="application/json" hidden>
+    </div>
+    <div class="btns"><button class="danger" id="s-wipe">Borrar todo</button></div>
+    <p class="note">Todo se guarda solo en este teléfono, en Safari. Exporta un respaldo de vez en cuando (por ejemplo cada cierre de quincena) y guárdalo en Archivos o Drive.</p>
+  </div>
+</section>
+
+</main>
+<nav>
+  <button data-t="quincena" class="on"><i>☑</i>Quincena</button>
+  <button data-t="mov"><i>＋</i>Movimiento</button>
+  <button data-t="resumen"><i>▤</i>Resumen</button>
+  <button data-t="ajustes"><i>⚙</i>Ajustes</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- datos fijos ----------
+const FONDOS=[
+  {id:'est',   nombre:'Estacionamiento',  porQ:400, detalle:'800 al mes, tu papá pone 1000'},
+  {id:'muro',  nombre:'Muro de escalada', porQ:350, detalle:'700 al mes, tu papá pone 750'},
+  {id:'ahorro',nombre:'Ahorro',           porQ:550, detalle:'550 cerrados, no se tocan'},
+  {id:'cann',  nombre:'Fondo cannabis',   porQ:400, detalle:'compras solo con 1600 juntos y stash vacío', meta:1600},
+  {id:'coche', nombre:'Lavado del coche', porQ:150, detalle:'cada 2 semanas'},
+];
+const TOTAL_Q=FONDOS.reduce((s,f)=>s+f.porQ,0);
+const CATS_DEF=['Café','Snacks','Gasolina','Comida','Salidas','Uber','Otro'];
+const KEY='quincena-app-v1';
+
+// ---------- estado ----------
+let S=load();
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.movs)return s;}catch(e){}
+  return {inicial:{santander:0,bbva:0},cats:CATS_DEF.slice(),movs:[]};
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(S));render();}
+
+// ---------- helpers ----------
+const mx=n=>'$'+Math.round(n).toLocaleString('es-MX');
+const pad=n=>String(n).padStart(2,'0');
+const hoy=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
+function qKey(iso){const [y,m,d]=iso.split('-').map(Number);return `${y}-${pad(m)}-${d<=15?'A':'B'}`;}
+function qLabel(k){const [y,m,h]=k.split('-');const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][+m-1];return `${h==='A'?'1–15':'16–fin'} ${M} ${y}`;}
+const hoyQ=()=>qKey(hoy());
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>e.classList.remove('on'),1600);}
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+// ---------- cálculos ----------
+function saldoFondo(id){return S.movs.reduce((s,m)=>m.fondo!==id?s:s+(m.tipo==='traspaso'?m.monto:m.tipo==='gasto'?-m.monto:0),0);}
+function saldos(){
+  let san=S.inicial.santander||0, bb=S.inicial.bbva||0;
+  for(const m of S.movs){
+    if(m.tipo==='traspaso'){san-=m.monto;bb+=m.monto;}
+    else{const d=m.tipo==='ingreso'?m.monto:-m.monto; if(m.cuenta==='bbva')bb+=d; else san+=d;}
+  }
+  const enFondos=FONDOS.reduce((s,f)=>s+Math.max(0,saldoFondo(f.id)),0);
+  return {san,bb,libre:bb-enFondos};
+}
+
+// ---------- render quincena ----------
+function renderQuincena(){
+  const q=hoyQ();
+  document.getElementById('titulo').innerHTML=`Quincena <span>${qLabel(q)}</span>`;
+  const hechos=FONDOS.filter(f=>S.movs.some(m=>m.id===`ap-${q}-${f.id}`));
+  const apartado=hechos.reduce((s,f)=>s+f.porQ,0);
+  document.getElementById('hero-num').textContent=mx(apartado);
+  document.getElementById('hero-of').textContent=apartado>=TOTAL_Q?'Todo apartado esta quincena. Lo que queda en Santander es tuyo.':`apartados de ${mx(TOTAL_Q)} que pasan a BBVA esta quincena`;
+  document.getElementById('hero-bar').style.width=(100*apartado/TOTAL_Q)+'%';
+  document.getElementById('checklist').innerHTML=FONDOS.map(f=>{
+    const on=hechos.includes(f);
+    return `<label class="${on?'done':''}"><input type="checkbox" data-f="${f.id}" ${on?'checked':''}><span class="t"><b>${f.nombre}</b><small>${f.detalle}</small></span><span class="amt num">${mx(f.porQ)}</span></label>`;
+  }).join('');
+  document.querySelectorAll('#checklist input').forEach(c=>c.onchange=()=>{
+    const f=FONDOS.find(x=>x.id===c.dataset.f), id=`ap-${q}-${f.id}`;
+    if(c.checked){S.movs.push({id,fecha:hoy(),tipo:'traspaso',cuenta:'santander',monto:f.porQ,cat:'Apartado',fondo:f.id,nota:f.nombre});toast(`${mx(f.porQ)} a BBVA · ${f.nombre}`);}
+    else S.movs=S.movs.filter(m=>m.id!==id);
+    save();
+  });
+  const s=saldos();
+  document.getElementById('saldos').innerHTML=`
+    <div class="saldo-card"><small>Santander · nómina</small><b class="num">${mx(s.san)}</b></div>
+    <div class="saldo-card"><small>BBVA · ahorros</small><b class="num">${mx(s.bb)}</b><div class="libre num">${mx(s.libre)} fuera de fondos</div></div>`;
+  document.getElementById('fondos').innerHTML=FONDOS.map(f=>{
+    const sal=saldoFondo(f.id);
+    let extra='';
+    if(f.meta){const n=Math.ceil(f.meta/f.porQ),full=Math.min(n,Math.floor(sal/f.porQ));extra=`<div class="blocks">${Array.from({length:n},(_,i)=>`<i class="${i<full?'f':''}"></i>`).join('')}</div>`;}
+    return `<div class="fondo"><span class="t"><b>${f.nombre}</b><small>${f.meta?`${mx(sal)} de ${mx(f.meta)}${sal>=f.meta?' · ya puedes comprar':''}`:`${mx(f.porQ)} por quincena`}</small>${extra}</span><span class="saldo num ${sal<0?'neg':''}">${mx(sal)}</span><button class="use" data-f="${f.id}">Usar</button></div>`;
+  }).join('');
+  document.querySelectorAll('.fondo .use').forEach(b=>b.onclick=()=>{
+    const f=FONDOS.find(x=>x.id===b.dataset.f);
+    const v=prompt(`¿Cuánto pagaste de ${f.nombre}? (sale de BBVA)`,f.meta||f.porQ*2);
+    const n=parseFloat(v);if(!n||n<=0)return;
+    S.movs.push({id:uid(),fecha:hoy(),tipo:'gasto',cuenta:'bbva',monto:n,cat:f.nombre,fondo:f.id,nota:'Pago del fondo'});
+    toast(`${mx(n)} pagados · ${f.nombre}`);save();
+  });
+}
+
+// ---------- movimientos ----------
+const F={tipo:'gasto',cuenta:'santander',cat:null};
+function seg(id,key,after){document.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove('on'));b.classList.add('on');F[key]=b.dataset.v;after&&after();});}
+function renderForm(){
+  const chips=document.getElementById('f-cat');
+  if(F.tipo==='gasto'){chips.style.display='flex';chips.innerHTML=S.cats.map(c=>`<button class="${F.cat===c?'on':''}">${c}</button>`).join('');chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{F.cat=b.textContent;renderForm();});}
+  else chips.style.display='none';
+  const sv=document.getElementById('f-save');
+  sv.className='save '+({gasto:'spend',ingreso:'income',traspaso:'set'}[F.tipo]);
+  sv.textContent={gasto:'Guardar gasto',ingreso:'Guardar ingreso',traspaso:'Pasar a BBVA'}[F.tipo];
+  document.getElementById('f-cuenta').parentElement.style.display=F.tipo==='traspaso'?'none':'flex';
+}
+seg('f-tipo','tipo',renderForm);seg('f-cuenta','cuenta');
+document.getElementById('f-fecha').value=hoy();
+document.getElementById('f-save').onclick=()=>{
+  const monto=parseFloat(document.getElementById('f-monto').value);
+  if(!monto||monto<=0){toast('Pon un monto');return;}
+  if(F.tipo==='gasto'&&!F.cat){toast('Elige una categoría');return;}
+  const nota=document.getElementById('f-nota').value.trim();
+  S.movs.push({id:uid(),fecha:document.getElementById('f-fecha').value||hoy(),tipo:F.tipo,cuenta:F.tipo==='traspaso'?'santander':F.cuenta,monto,cat:F.tipo==='gasto'?F.cat:F.tipo==='ingreso'?'Ingreso':'Traspaso',nota});
+  document.getElementById('f-monto').value='';document.getElementById('f-nota').value='';
+  toast('Guardado');save();
+};
+function renderMovs(){
+  const el=document.getElementById('movs');
+  const list=[...S.movs].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,120);
+  if(!list.length){el.innerHTML='<div class="empty">Sin movimientos todavía. El primero que registres aparece aquí.</div>';return;}
+  let html='',last='';
+  for(const m of list){
+    if(m.fecha!==last){last=m.fecha;html+=`<div class="day">${new Date(m.fecha+'T12:00').toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'})}</div>`;}
+    const sign=m.tipo==='gasto'?'−':m.tipo==='ingreso'?'+':'→';
+    html+=`<div class="mov"><span class="t"><b>${m.cat}${m.nota?' · '+m.nota:''}</b><small>${m.tipo==='traspaso'?'Santander → BBVA':m.cuenta==='bbva'?'BBVA':'Santander'}</small></span><span class="a num ${m.tipo}">${sign}${mx(m.monto)}</span><button class="x" data-id="${m.id}" aria-label="Borrar">×</button></div>`;
+  }
+  el.innerHTML=html;
+  el.querySelectorAll('.x').forEach(b=>b.onclick=()=>{if(confirm('¿Borrar este movimiento?')){S.movs=S.movs.filter(m=>m.id!==b.dataset.id);save();}});
+}
+
+// ---------- resumen ----------
+let PER='q';
+seg('r-per','per',()=>{PER=F.per;render();});
+function inPeriod(m){
+  if(PER==='all')return true;
+  if(PER==='q')return qKey(m.fecha)===hoyQ();
+  return m.fecha.slice(0,7)===hoy().slice(0,7);
+}
+function renderResumen(){
+  const ms=S.movs.filter(inPeriod);
+  const gastos=ms.filter(m=>m.tipo==='gasto'&&!m.fondo);
+  const byCat={};for(const g of gastos)byCat[g.cat]=(byCat[g.cat]||0)+g.monto;
+  const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const max=cats[0]?cats[0][1]:1;
+  const el=document.getElementById('r-cats');
+  el.innerHTML=cats.length?cats.map(([c,v])=>`<div class="bar"><div class="l"><span>${c}</span><b class="num">${mx(v)}</b></div><div class="k"><i style="width:${100*v/max}%"></i></div></div>`).join(''):'<div class="empty">Sin gastos libres en este periodo.</div>';
+  document.getElementById('r-total').textContent=mx(gastos.reduce((s,m)=>s+m.monto,0));
+  document.getElementById('r-set').textContent=mx(ms.filter(m=>m.tipo==='traspaso').reduce((s,m)=>s+m.monto,0));
+  document.getElementById('r-inc').textContent=mx(ms.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.monto,0));
+  const byQ={};for(const m of S.movs)if(m.tipo==='gasto'&&!m.fondo){const k=qKey(m.fecha);byQ[k]=(byQ[k]||0)+m.monto;}
+  const qs=Object.entries(byQ).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,8);
+  const qmax=Math.max(1,...qs.map(x=>x[1]));
+  document.getElementById('r-hist').innerHTML=qs.length?qs.map(([k,v])=>`<div class="bar"><div class="l"><span>${qLabel(k)}</span><b class="num">${mx(v)}</b></div><div class="k"><i style="width:${100*v/qmax}%"></i></div></div>`).join(''):'<div class="empty">Aquí vas a ver cuánto gastas quincena a quincena.</div>';
+}
+
+// ---------- ajustes ----------
+const sSan=document.getElementById('s-san'),sBb=document.getElementById('s-bbva'),sCats=document.getElementById('s-cats');
+sSan.onchange=()=>{S.inicial.santander=parseFloat(sSan.value)||0;save();};
+sBb.onchange=()=>{S.inicial.bbva=parseFloat(sBb.value)||0;save();};
+sCats.onchange=()=>{S.cats=sCats.value.split(',').map(x=>x.trim()).filter(Boolean);if(!S.cats.length)S.cats=CATS_DEF.slice();save();};
+document.getElementById('s-export').onclick=()=>{
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`quincena-${hoy()}.json`;a.click();
+};
+document.getElementById('s-import').onclick=()=>document.getElementById('s-file').click();
+document.getElementById('s-file').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  f.text().then(t=>{try{const s=JSON.parse(t);if(!s.movs)throw 0;S=s;save();toast('Respaldo cargado');}catch{toast('Ese archivo no es un respaldo válido');}});
+};
+document.getElementById('s-wipe').onclick=()=>{if(confirm('Se borra todo lo guardado en este teléfono. ¿Seguro?')){localStorage.removeItem(KEY);S=load();render();}};
+function renderAjustes(){sSan.value=S.inicial.santander||'';sBb.value=S.inicial.bbva||'';sCats.value=S.cats.join(', ');}
+
+// ---------- tabs y render ----------
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='tab-'+b.dataset.t));
+  window.scrollTo(0,0);
+});
+function render(){renderQuincena();renderForm();renderMovs();renderResumen();renderAjustes();}
+render();
+</script>
+</body>
+</html>
