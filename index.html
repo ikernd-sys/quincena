@@ -11,7 +11,7 @@
 :root{
   --bg:#EEF1F5; --paper:#FFFFFF; --ink:#14213D; --ink-2:#4B5568; --line:#D6DCE5;
   --set:#0F766E; --set-soft:#D9F0EC; --spend:#B4432E; --spend-soft:#F6E1DC;
-  --income:#1D4ED8; --debt:#7C3AED; --radius:14px;
+  --income:#1D4ED8; --debt:#7C3AED; --vales:#B45309; --radius:14px;
   --font:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -49,6 +49,9 @@ button{cursor:pointer;border:0;background:none}
 .check.debt{margin-top:8px}
 .check.debt input:checked{background:var(--debt);border-color:var(--debt)}
 .check.debt .amt{color:var(--debt)}
+.check.vales{margin-top:8px}
+.check.vales input:checked{background:var(--vales);border-color:var(--vales)}
+.check.vales .amt{color:var(--vales)}
 
 /* fondos */
 h2{font-size:13px;font-weight:600;color:var(--ink-2);margin:22px 4px 8px}
@@ -80,6 +83,10 @@ h2{font-size:13px;font-weight:600;color:var(--ink-2);margin:22px 4px 8px}
 .saldo-card small{display:block;color:var(--ink-2);font-size:13px}
 .saldo-card b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:2px}
 .saldo-card .libre{font-size:13px;color:var(--set);margin-top:4px}
+.saldo-card.vales{grid-column:1 / -1;display:flex;align-items:baseline;justify-content:space-between}
+.saldo-card.vales b{font-size:20px;margin-top:0;color:var(--vales)}
+.saldo-card.vales small{display:inline}
+.saldo-card.vales small em{font-style:normal;display:block;font-size:12px;margin-top:2px}
 
 /* movimientos */
 .form{background:var(--paper);border-radius:var(--radius);padding:14px 16px}
@@ -102,7 +109,7 @@ h2{font-size:13px;font-weight:600;color:var(--ink-2);margin:22px 4px 8px}
 .mov .t b{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mov .t small{color:var(--ink-2);font-size:13px}
 .mov .a{font-weight:600;white-space:nowrap}
-.mov .a.gasto{color:var(--spend)}.mov .a.traspaso{color:var(--set)}.mov .a.ingreso{color:var(--income)}.mov .a.deuda{color:var(--debt)}
+.mov .a.gasto{color:var(--spend)}.mov .a.traspaso{color:var(--set)}.mov .a.ingreso{color:var(--income)}.mov .a.deuda{color:var(--debt)}.mov .a.vales{color:var(--vales)}
 .mov .x{color:var(--line);font-size:22px;padding:0 2px;line-height:1}
 .day{padding:10px 16px 4px;font-size:13px;color:var(--ink-2);background:var(--paper);border-top:1px solid var(--line)}
 .day:first-child{border-top:0}
@@ -152,6 +159,7 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
   </div>
   <div class="check" id="checklist"></div>
   <div class="check debt" id="checklist-deuda"></div>
+  <div class="check vales" id="checklist-vales"></div>
   <h2>Saldos</h2>
   <div class="saldos" id="saldos"></div>
   <h2>Deuda con mamá</h2>
@@ -174,6 +182,7 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
       <div class="seg" id="f-cuenta">
         <button data-v="santander" class="on">Santander</button>
         <button data-v="bbva">BBVA</button>
+        <button data-v="vales">Vales</button>
       </div>
     </div>
     <div class="chips" id="f-cat"></div>
@@ -194,6 +203,7 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
   <div class="tot"><span>Gastos del periodo</span><b class="num" id="r-total"></b></div>
   <div class="tot"><span>Apartado a fondos</span><b class="num" id="r-set"></b></div>
   <div class="tot"><span>Pagado a mamá</span><b class="num" id="r-deuda"></b></div>
+  <div class="tot"><span>Pagado con vales</span><b class="num" id="r-vales"></b></div>
   <div class="tot"><span>Ingresos</span><b class="num" id="r-inc"></b></div>
   <h2>Gasto por quincena</h2>
   <div class="bars" id="r-hist"></div>
@@ -207,7 +217,13 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
   <div class="ajuste">
     <label for="s-bbva">Saldo inicial BBVA (ahorros)</label>
     <input id="s-bbva" type="number" inputmode="decimal" placeholder="0">
-    <p class="note">Los saldos iniciales son el punto de partida: pon lo que tienes hoy en cada cuenta y a partir de ahí la app lleva la cuenta con tus movimientos.</p>
+  </div>
+  <div class="ajuste">
+    <label for="s-vales">Saldo inicial Vales (crédito T3B)</label>
+    <input id="s-vales" type="number" inputmode="decimal" placeholder="0">
+    <label for="s-vales-mes" style="margin-top:10px">Depósito mensual de vales</label>
+    <input id="s-vales-mes" type="number" inputmode="numeric">
+    <p class="note">Los saldos iniciales son el punto de partida: pon lo que tienes hoy en cada cuenta y a partir de ahí la app lleva la cuenta con tus movimientos. Los vales solo se gastan en T3B; cada mes palomeas el depósito en la pestaña Quincena.</p>
   </div>
   <div class="ajuste">
     <label>Deuda con mamá</label>
@@ -254,13 +270,16 @@ const FONDOS=[
 ];
 const TOTAL_Q=FONDOS.reduce((s,f)=>s+f.porQ,0);
 const DEUDA_DEF={total:25000,porQ:500,previos:14};
+const VALES_DEF={mes:1000};
 const CATS_DEF=['Café','Snacks','Gasolina','Comida','Salidas','Uber','Otro'];
 const KEY='quincena-app-v1';
 
 // ---------- estado ----------
 let S=load();
 function normaliza(s){
-  if(!s.inicial)s.inicial={santander:0,bbva:0};
+  if(!s.inicial)s.inicial={santander:0,bbva:0,vales:0};
+  if(s.inicial.vales==null)s.inicial.vales=0;
+  if(!s.vales)s.vales={...VALES_DEF};
   if(!s.cats||!s.cats.length)s.cats=CATS_DEF.slice();
   if(!s.movs)s.movs=[];
   if(!s.deuda)s.deuda={...DEUDA_DEF};
@@ -292,13 +311,13 @@ function qDespues(n){
 // ---------- cálculos ----------
 function saldoFondo(id){return S.movs.reduce((s,m)=>m.fondo!==id?s:s+(m.tipo==='traspaso'?m.monto:m.tipo==='gasto'?-m.monto:0),0);}
 function saldos(){
-  let san=S.inicial.santander||0, bb=S.inicial.bbva||0;
+  let san=S.inicial.santander||0, bb=S.inicial.bbva||0, va=S.inicial.vales||0;
   for(const m of S.movs){
     if(m.tipo==='traspaso'){san-=m.monto;bb+=m.monto;}
-    else{const d=m.tipo==='ingreso'?m.monto:-m.monto; if(m.cuenta==='bbva')bb+=d; else san+=d;}
+    else{const d=m.tipo==='ingreso'?m.monto:-m.monto; if(m.cuenta==='bbva')bb+=d; else if(m.cuenta==='vales')va+=d; else san+=d;}
   }
   const enFondos=FONDOS.reduce((s,f)=>s+Math.max(0,saldoFondo(f.id)),0);
-  return {san,bb,libre:bb-enFondos};
+  return {san,bb,va,libre:bb-enFondos};
 }
 function deuda(){
   const D=S.deuda, pagos=S.movs.filter(m=>m.fondo==='mama'&&m.tipo==='gasto');
@@ -343,6 +362,16 @@ function renderQuincena(){
     save();
   };
 
+  // depósito mensual de vales
+  const mesK=hoy().slice(0,7), idV=`vales-${mesK}`, vOn=S.movs.some(m=>m.id===idV);
+  const [vy,vm]=mesK.split('-');
+  document.getElementById('checklist-vales').innerHTML=`<label class="${vOn?'done':''}"><input type="checkbox" id="chk-vales" ${vOn?'checked':''}><span class="t"><b>Depósito de vales</b><small>crédito T3B de ${MESES[+vm-1]} ${vy} · una vez al mes</small></span><span class="amt num">${mx(S.vales.mes)}</span></label>`;
+  document.getElementById('chk-vales').onchange=e=>{
+    if(e.target.checked){S.movs.push({id:idV,fecha:hoy(),tipo:'ingreso',cuenta:'vales',monto:S.vales.mes,cat:'Vales',nota:'Depósito del mes'});toast(`${mx(S.vales.mes)} en vales`);}
+    else S.movs=S.movs.filter(m=>m.id!==idV);
+    save();
+  };
+
   // tarjeta de deuda
   const pct=Math.min(100,100*dd.pagado/(D.total||1));
   document.getElementById('deuda').innerHTML=`<div class="deuda">
@@ -355,7 +384,8 @@ function renderQuincena(){
   const s=saldos();
   document.getElementById('saldos').innerHTML=`
     <div class="saldo-card"><small>Santander · nómina</small><b class="num">${mx(s.san)}</b></div>
-    <div class="saldo-card"><small>BBVA · ahorros</small><b class="num">${mx(s.bb)}</b><div class="libre num">${mx(s.libre)} fuera de fondos</div></div>`;
+    <div class="saldo-card"><small>BBVA · ahorros</small><b class="num">${mx(s.bb)}</b><div class="libre num">${mx(s.libre)} fuera de fondos</div></div>
+    <div class="saldo-card vales"><small>Vales · crédito T3B<em>solo para comprar en la tienda</em></small><b class="num">${mx(s.va)}</b></div>`;
   document.getElementById('fondos').innerHTML=FONDOS.map(f=>{
     const sal=saldoFondo(f.id);
     let extra='';
@@ -402,8 +432,8 @@ function renderMovs(){
   for(const m of list){
     if(m.fecha!==last){last=m.fecha;html+=`<div class="day">${new Date(m.fecha+'T12:00').toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'})}</div>`;}
     const sign=m.tipo==='gasto'?'−':m.tipo==='ingreso'?'+':'→';
-    const cls=m.fondo==='mama'?'deuda':m.tipo;
-    html+=`<div class="mov"><span class="t"><b>${m.cat}${m.nota?' · '+m.nota:''}</b><small>${m.tipo==='traspaso'?'Santander → BBVA':m.cuenta==='bbva'?'BBVA':'Santander'}</small></span><span class="a num ${cls}">${sign}${mx(m.monto)}</span><button class="x" data-id="${m.id}" aria-label="Borrar">×</button></div>`;
+    const cls=m.fondo==='mama'?'deuda':m.cuenta==='vales'?'vales':m.tipo;
+    html+=`<div class="mov"><span class="t"><b>${m.cat}${m.nota?' · '+m.nota:''}</b><small>${m.tipo==='traspaso'?'Santander → BBVA':m.cuenta==='bbva'?'BBVA':m.cuenta==='vales'?'Vales':'Santander'}</small></span><span class="a num ${cls}">${sign}${mx(m.monto)}</span><button class="x" data-id="${m.id}" aria-label="Borrar">×</button></div>`;
   }
   el.innerHTML=html;
   el.querySelectorAll('.x').forEach(b=>b.onclick=()=>{if(confirm('¿Borrar este movimiento?')){S.movs=S.movs.filter(m=>m.id!==b.dataset.id);save();}});
@@ -428,7 +458,8 @@ function renderResumen(){
   document.getElementById('r-total').textContent=mx(gastos.reduce((s,m)=>s+m.monto,0));
   document.getElementById('r-set').textContent=mx(ms.filter(m=>m.tipo==='traspaso').reduce((s,m)=>s+m.monto,0));
   document.getElementById('r-deuda').textContent=mx(ms.filter(m=>m.fondo==='mama'&&m.tipo==='gasto').reduce((s,m)=>s+m.monto,0));
-  document.getElementById('r-inc').textContent=mx(ms.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.monto,0));
+  document.getElementById('r-vales').textContent=mx(gastos.filter(m=>m.cuenta==='vales').reduce((s,m)=>s+m.monto,0));
+  document.getElementById('r-inc').textContent=mx(ms.filter(m=>m.tipo==='ingreso'&&m.cuenta!=='vales').reduce((s,m)=>s+m.monto,0));
   const byQ={};for(const m of S.movs)if(m.tipo==='gasto'&&!m.fondo){const k=qKey(m.fecha);byQ[k]=(byQ[k]||0)+m.monto;}
   const qs=Object.entries(byQ).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,8);
   const qmax=Math.max(1,...qs.map(x=>x[1]));
@@ -437,9 +468,12 @@ function renderResumen(){
 
 // ---------- ajustes ----------
 const sSan=document.getElementById('s-san'),sBb=document.getElementById('s-bbva'),sCats=document.getElementById('s-cats');
+const sVa=document.getElementById('s-vales'),sVm=document.getElementById('s-vales-mes');
 const sDT=document.getElementById('s-d-total'),sDP=document.getElementById('s-d-pago'),sDV=document.getElementById('s-d-prev');
 sSan.onchange=()=>{S.inicial.santander=parseFloat(sSan.value)||0;save();};
 sBb.onchange=()=>{S.inicial.bbva=parseFloat(sBb.value)||0;save();};
+sVa.onchange=()=>{S.inicial.vales=parseFloat(sVa.value)||0;save();};
+sVm.onchange=()=>{S.vales.mes=Math.max(0,parseFloat(sVm.value)||0);save();};
 sDT.onchange=()=>{S.deuda.total=Math.max(0,parseFloat(sDT.value)||0);save();};
 sDP.onchange=()=>{S.deuda.porQ=Math.max(0,parseFloat(sDP.value)||0);save();};
 sDV.onchange=()=>{S.deuda.previos=Math.max(0,parseInt(sDV.value)||0);save();};
@@ -454,7 +488,7 @@ document.getElementById('s-file').onchange=e=>{
   f.text().then(t=>{try{const s=JSON.parse(t);if(!s.movs)throw 0;S=normaliza(s);save();toast('Respaldo cargado');}catch{toast('Ese archivo no es un respaldo válido');}});
 };
 document.getElementById('s-wipe').onclick=()=>{if(confirm('Se borra todo lo guardado en este teléfono. ¿Seguro?')){localStorage.removeItem(KEY);S=load();render();}};
-function renderAjustes(){sSan.value=S.inicial.santander||'';sBb.value=S.inicial.bbva||'';sCats.value=S.cats.join(', ');sDT.value=S.deuda.total;sDP.value=S.deuda.porQ;sDV.value=S.deuda.previos;}
+function renderAjustes(){sSan.value=S.inicial.santander||'';sBb.value=S.inicial.bbva||'';sVa.value=S.inicial.vales||'';sVm.value=S.vales.mes;sCats.value=S.cats.join(', ');sDT.value=S.deuda.total;sDP.value=S.deuda.porQ;sDV.value=S.deuda.previos;}
 
 // ---------- tabs y render ----------
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
