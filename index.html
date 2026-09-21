@@ -109,7 +109,7 @@ h2{font-size:13px;font-weight:600;color:var(--ink-2);margin:22px 4px 8px}
 .mov .t b{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mov .t small{color:var(--ink-2);font-size:13px}
 .mov .a{font-weight:600;white-space:nowrap}
-.mov .a.gasto{color:var(--spend)}.mov .a.traspaso{color:var(--set)}.mov .a.ingreso{color:var(--income)}.mov .a.deuda{color:var(--debt)}.mov .a.vales{color:var(--vales)}
+.mov .a.gasto{color:var(--spend)}.mov .a.traspaso{color:var(--set)}.mov .a.ingreso{color:var(--income)}.mov .a.deuda{color:var(--debt)}.mov .a.vales{color:var(--vales)}.mov .a.apartado{color:var(--set)}
 .mov .x{color:var(--line);font-size:22px;padding:0 2px;line-height:1}
 .day{padding:10px 16px 4px;font-size:13px;color:var(--ink-2);background:var(--paper);border-top:1px solid var(--line)}
 .day:first-child{border-top:0}
@@ -263,8 +263,8 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
 // ---------- datos fijos ----------
 const FONDOS=[
   {id:'est',   nombre:'Estacionamiento',  porQ:400, detalle:'800 al mes, tu papá pone 1000'},
-  {id:'muro',  nombre:'Muro de escalada', porQ:375, detalle:'750 al mes, tu papá pone 700'},
-  {id:'ahorro',nombre:'Ahorro',           porQ:550, detalle:'550 cerrados, no se tocan'},
+  {id:'muro',  nombre:'Muro de escalada', porQ:375, detalle:'se queda en Santander · se cobra solo el 19', cuenta:'santander'},
+  {id:'ahorro',nombre:'Ahorro',           porQ:550, detalle:'550 cerrados a BBVA', sinFondo:true},
   {id:'cann',  nombre:'Fondo Ocio',       porQ:400, detalle:'gastas solo con 1600 juntos', meta:1600},
   {id:'coche', nombre:'Lavado del coche', porQ:150, detalle:'cada 2 semanas'},
 ];
@@ -309,15 +309,17 @@ function qDespues(n){
 }
 
 // ---------- cálculos ----------
-function saldoFondo(id){return S.movs.reduce((s,m)=>m.fondo!==id?s:s+(m.tipo==='traspaso'?m.monto:m.tipo==='gasto'?-m.monto:0),0);}
+function saldoFondo(id){return S.movs.reduce((s,m)=>m.fondo!==id?s:s+(m.tipo==='traspaso'||m.tipo==='apartado'?m.monto:m.tipo==='gasto'?-m.monto:0),0);}
 function saldos(){
   let san=S.inicial.santander||0, bb=S.inicial.bbva||0, va=S.inicial.vales||0;
   for(const m of S.movs){
+    if(m.tipo==='apartado')continue;
     if(m.tipo==='traspaso'){san-=m.monto;bb+=m.monto;}
     else{const d=m.tipo==='ingreso'?m.monto:-m.monto; if(m.cuenta==='bbva')bb+=d; else if(m.cuenta==='vales')va+=d; else san+=d;}
   }
-  const enFondos=FONDOS.reduce((s,f)=>s+Math.max(0,saldoFondo(f.id)),0);
-  return {san,bb,va,libre:bb-enFondos};
+  const enFondos=FONDOS.filter(f=>!f.sinFondo&&f.cuenta!=='santander').reduce((s,f)=>s+Math.max(0,saldoFondo(f.id)),0);
+  const reservado=FONDOS.filter(f=>f.cuenta==='santander').reduce((s,f)=>s+Math.max(0,saldoFondo(f.id)),0);
+  return {san,bb,va,libre:bb-enFondos,reservado};
 }
 function deuda(){
   const D=S.deuda, pagos=S.movs.filter(m=>m.fondo==='mama'&&m.tipo==='gasto');
@@ -336,7 +338,7 @@ function renderQuincena(){
   const hechos=FONDOS.filter(f=>S.movs.some(m=>m.id===`ap-${q}-${f.id}`));
   const apartado=hechos.reduce((s,f)=>s+f.porQ,0);
   document.getElementById('hero-num').textContent=mx(apartado);
-  document.getElementById('hero-of').textContent=apartado>=TOTAL_Q?'Todo apartado esta quincena. Lo que queda en Santander es tuyo.':`apartados de ${mx(TOTAL_Q)} que pasan a BBVA esta quincena`;
+  document.getElementById('hero-of').textContent=apartado>=TOTAL_Q?'Todo apartado esta quincena. Lo que queda en Santander es tuyo.':`apartados de ${mx(TOTAL_Q)} esta quincena`;
   document.getElementById('hero-bar').style.width=(100*apartado/TOTAL_Q)+'%';
   document.getElementById('checklist').innerHTML=FONDOS.map(f=>{
     const on=hechos.includes(f);
@@ -344,7 +346,10 @@ function renderQuincena(){
   }).join('');
   document.querySelectorAll('#checklist input').forEach(c=>c.onchange=()=>{
     const f=FONDOS.find(x=>x.id===c.dataset.f), id=`ap-${q}-${f.id}`;
-    if(c.checked){S.movs.push({id,fecha:hoy(),tipo:'traspaso',cuenta:'santander',monto:f.porQ,cat:'Apartado',fondo:f.id,nota:f.nombre});toast(`${mx(f.porQ)} a BBVA · ${f.nombre}`);}
+    if(c.checked){
+      if(f.cuenta==='santander'){S.movs.push({id,fecha:hoy(),tipo:'apartado',cuenta:'santander',monto:f.porQ,cat:'Apartado',fondo:f.id,nota:f.nombre});toast(`${mx(f.porQ)} reservados en Santander · ${f.nombre}`);}
+      else{S.movs.push({id,fecha:hoy(),tipo:'traspaso',cuenta:'santander',monto:f.porQ,cat:'Apartado',fondo:f.id,nota:f.nombre});toast(`${mx(f.porQ)} a BBVA · ${f.nombre}`);}
+    }
     else S.movs=S.movs.filter(m=>m.id!==id);
     save();
   });
@@ -383,10 +388,10 @@ function renderQuincena(){
 
   const s=saldos();
   document.getElementById('saldos').innerHTML=`
-    <div class="saldo-card"><small>Santander · nómina</small><b class="num">${mx(s.san)}</b></div>
-    <div class="saldo-card"><small>BBVA · ahorros</small><b class="num">${mx(s.bb)}</b><div class="libre num">${mx(s.libre)} fuera de fondos</div></div>
+    <div class="saldo-card"><small>Santander · nómina</small><b class="num">${mx(s.san)}</b>${s.reservado>0?`<div class="libre num">${mx(s.reservado)} reservados para el muro</div>`:''}</div>
+    <div class="saldo-card"><small>BBVA · ahorros</small><b class="num">${mx(s.bb)}</b><div class="libre num">${mx(s.libre)} sin comprometer</div></div>
     <div class="saldo-card vales"><small>Vales · crédito T3B<em>solo para comprar en la tienda</em></small><b class="num">${mx(s.va)}</b></div>`;
-  document.getElementById('fondos').innerHTML=FONDOS.map(f=>{
+  document.getElementById('fondos').innerHTML=FONDOS.filter(f=>!f.sinFondo).map(f=>{
     const sal=saldoFondo(f.id);
     let extra='';
     if(f.meta){const n=Math.ceil(f.meta/f.porQ),full=Math.min(n,Math.floor(sal/f.porQ));extra=`<div class="blocks">${Array.from({length:n},(_,i)=>`<i class="${i<full?'f':''}"></i>`).join('')}</div>`;}
@@ -394,9 +399,10 @@ function renderQuincena(){
   }).join('');
   document.querySelectorAll('.fondo .use').forEach(b=>b.onclick=()=>{
     const f=FONDOS.find(x=>x.id===b.dataset.f);
-    const v=prompt(`¿Cuánto pagaste de ${f.nombre}? (sale de BBVA)`,f.meta||f.porQ*2);
+    const cta=f.cuenta||'bbva';
+    const v=prompt(`¿Cuánto pagaste de ${f.nombre}? (sale de ${cta==='santander'?'Santander':'BBVA'})`,f.meta||f.porQ*2);
     const n=parseFloat(v);if(!n||n<=0)return;
-    S.movs.push({id:uid(),fecha:hoy(),tipo:'gasto',cuenta:'bbva',monto:n,cat:f.nombre,fondo:f.id,nota:'Pago del fondo'});
+    S.movs.push({id:uid(),fecha:hoy(),tipo:'gasto',cuenta:cta,monto:n,cat:f.nombre,fondo:f.id,nota:'Pago del fondo'});
     toast(`${mx(n)} pagados · ${f.nombre}`);save();
   });
 }
@@ -431,9 +437,9 @@ function renderMovs(){
   let html='',last='';
   for(const m of list){
     if(m.fecha!==last){last=m.fecha;html+=`<div class="day">${new Date(m.fecha+'T12:00').toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'})}</div>`;}
-    const sign=m.tipo==='gasto'?'−':m.tipo==='ingreso'?'+':'→';
+    const sign=m.tipo==='gasto'?'−':m.tipo==='ingreso'?'+':m.tipo==='apartado'?'◦':'→';
     const cls=m.fondo==='mama'?'deuda':m.cuenta==='vales'?'vales':m.tipo;
-    html+=`<div class="mov"><span class="t"><b>${m.cat}${m.nota?' · '+m.nota:''}</b><small>${m.tipo==='traspaso'?'Santander → BBVA':m.cuenta==='bbva'?'BBVA':m.cuenta==='vales'?'Vales':'Santander'}</small></span><span class="a num ${cls}">${sign}${mx(m.monto)}</span><button class="x" data-id="${m.id}" aria-label="Borrar">×</button></div>`;
+    html+=`<div class="mov"><span class="t"><b>${m.cat}${m.nota?' · '+m.nota:''}</b><small>${m.tipo==='traspaso'?'Santander → BBVA':m.tipo==='apartado'?'Reservado en Santander':m.cuenta==='bbva'?'BBVA':m.cuenta==='vales'?'Vales':'Santander'}</small></span><span class="a num ${cls}">${sign}${mx(m.monto)}</span><button class="x" data-id="${m.id}" aria-label="Borrar">×</button></div>`;
   }
   el.innerHTML=html;
   el.querySelectorAll('.x').forEach(b=>b.onclick=()=>{if(confirm('¿Borrar este movimiento?')){S.movs=S.movs.filter(m=>m.id!==b.dataset.id);save();}});
@@ -456,7 +462,7 @@ function renderResumen(){
   const el=document.getElementById('r-cats');
   el.innerHTML=cats.length?cats.map(([c,v])=>`<div class="bar"><div class="l"><span>${c}</span><b class="num">${mx(v)}</b></div><div class="k"><i style="width:${100*v/max}%"></i></div></div>`).join(''):'<div class="empty">Sin gastos libres en este periodo.</div>';
   document.getElementById('r-total').textContent=mx(gastos.reduce((s,m)=>s+m.monto,0));
-  document.getElementById('r-set').textContent=mx(ms.filter(m=>m.tipo==='traspaso').reduce((s,m)=>s+m.monto,0));
+  document.getElementById('r-set').textContent=mx(ms.filter(m=>m.tipo==='traspaso'||m.tipo==='apartado').reduce((s,m)=>s+m.monto,0));
   document.getElementById('r-deuda').textContent=mx(ms.filter(m=>m.fondo==='mama'&&m.tipo==='gasto').reduce((s,m)=>s+m.monto,0));
   document.getElementById('r-vales').textContent=mx(gastos.filter(m=>m.cuenta==='vales').reduce((s,m)=>s+m.monto,0));
   document.getElementById('r-inc').textContent=mx(ms.filter(m=>m.tipo==='ingreso'&&m.cuenta!=='vales').reduce((s,m)=>s+m.monto,0));
