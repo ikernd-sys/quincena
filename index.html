@@ -11,7 +11,7 @@
 :root{
   --bg:#EEF1F5; --paper:#FFFFFF; --ink:#14213D; --ink-2:#4B5568; --line:#D6DCE5;
   --set:#0F766E; --set-soft:#D9F0EC; --spend:#B4432E; --spend-soft:#F6E1DC;
-  --income:#1D4ED8; --debt:#7C3AED; --vales:#B45309; --radius:14px;
+  --income:#1D4ED8; --debt:#7C3AED; --vales:#B45309; --credit:#9F1239; --radius:14px;
   --font:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -87,6 +87,16 @@ h2{font-size:13px;font-weight:600;color:var(--ink-2);margin:22px 4px 8px}
 .saldo-card.vales b{font-size:20px;margin-top:0;color:var(--vales)}
 .saldo-card.vales small{display:inline}
 .saldo-card.vales small em{font-style:normal;display:block;font-size:12px;margin-top:2px}
+.saldo-card .sub{font-size:12px;color:var(--ink-2);margin-top:4px;line-height:1.4}
+.saldo-card.credito{grid-column:1 / -1}
+.saldo-card.credito .head{display:flex;align-items:baseline;justify-content:space-between}
+.saldo-card.credito b{color:var(--credit);font-size:20px;margin-top:0}
+.saldo-card.credito b.ok{color:var(--set)}
+.saldo-card.credito .uso{font-size:12px;margin-top:6px;color:var(--ink-2)}
+.saldo-card.credito .uso.ok{color:var(--set)}
+.saldo-card.credito .uso.warn{color:var(--credit)}
+.saldo-card.credito button.pagar{margin-top:10px;width:100%;background:var(--credit);color:#fff;border-radius:10px;padding:11px;font-weight:600;font-size:15px}
+.saldo-card.credito button.pagar.calm{background:var(--bg);color:var(--ink)}
 
 /* movimientos */
 .form{background:var(--paper);border-radius:var(--radius);padding:14px 16px}
@@ -109,7 +119,7 @@ h2{font-size:13px;font-weight:600;color:var(--ink-2);margin:22px 4px 8px}
 .mov .t b{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mov .t small{color:var(--ink-2);font-size:13px}
 .mov .a{font-weight:600;white-space:nowrap}
-.mov .a.gasto{color:var(--spend)}.mov .a.traspaso{color:var(--set)}.mov .a.ingreso{color:var(--income)}.mov .a.deuda{color:var(--debt)}.mov .a.vales{color:var(--vales)}.mov .a.apartado{color:var(--set)}
+.mov .a.gasto{color:var(--spend)}.mov .a.traspaso{color:var(--set)}.mov .a.ingreso{color:var(--income)}.mov .a.deuda{color:var(--debt)}.mov .a.vales{color:var(--vales)}.mov .a.apartado{color:var(--set)}.mov .a.credito{color:var(--credit)}.mov .a.pagotdc{color:var(--credit)}
 .mov .x{color:var(--line);font-size:22px;padding:0 2px;line-height:1}
 .day{padding:10px 16px 4px;font-size:13px;color:var(--ink-2);background:var(--paper);border-top:1px solid var(--line)}
 .day:first-child{border-top:0}
@@ -183,6 +193,7 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
         <button data-v="santander" class="on">Santander</button>
         <button data-v="bbva">BBVA</button>
         <button data-v="vales">Vales</button>
+        <button data-v="credito">Crédito</button>
       </div>
     </div>
     <div class="chips" id="f-cat"></div>
@@ -204,6 +215,7 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
   <div class="tot"><span>Apartado a fondos</span><b class="num" id="r-set"></b></div>
   <div class="tot"><span>Pagado a mamá</span><b class="num" id="r-deuda"></b></div>
   <div class="tot"><span>Pagado con vales</span><b class="num" id="r-vales"></b></div>
+  <div class="tot"><span>Pagado con crédito</span><b class="num" id="r-credito"></b></div>
   <div class="tot"><span>Ingresos</span><b class="num" id="r-inc"></b></div>
   <h2>Gasto por quincena</h2>
   <div class="bars" id="r-hist"></div>
@@ -224,6 +236,15 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
     <label for="s-vales-mes" style="margin-top:10px">Depósito mensual de vales</label>
     <input id="s-vales-mes" type="number" inputmode="numeric">
     <p class="note">Los saldos iniciales son el punto de partida: pon lo que tienes hoy en cada cuenta y a partir de ahí la app lleva la cuenta con tus movimientos. Los vales solo se gastan en T3B; cada mes palomeas el depósito en la pestaña Quincena.</p>
+  </div>
+  <div class="ajuste">
+    <label>Tarjeta de crédito Santander</label>
+    <div class="grid">
+      <div><label for="s-tc-saldo">Debes hoy</label><input id="s-tc-saldo" type="number" inputmode="decimal" placeholder="0"></div>
+      <div><label for="s-tc-corte">Día de corte</label><input id="s-tc-corte" type="number" inputmode="numeric" min="1" max="31"></div>
+      <div><label for="s-tc-min">Compra mínima</label><input id="s-tc-min" type="number" inputmode="numeric"></div>
+    </div>
+    <p class="note">Pon el día de corte que viene en tu estado de cuenta. El botón "Pagar tarjeta" se enciende el día siguiente al corte y hasta la fecha límite (unos 20 días después); paga el total y el saldo vuelve a cero.</p>
   </div>
   <div class="ajuste">
     <label>Deuda con mamá</label>
@@ -271,6 +292,7 @@ const FONDOS=[
 const TOTAL_Q=FONDOS.reduce((s,f)=>s+f.porQ,0);
 const DEUDA_DEF={total:25000,porQ:500,previos:14};
 const VALES_DEF={mes:1000};
+const TC_DEF={corte:1,min:200};
 const CATS_DEF=['Café','Snacks','Gasolina','Comida','Salidas','Uber','Otro'];
 const KEY='quincena-app-v1';
 
@@ -280,6 +302,8 @@ function normaliza(s){
   if(!s.inicial)s.inicial={santander:0,bbva:0,vales:0};
   if(s.inicial.vales==null)s.inicial.vales=0;
   if(!s.vales)s.vales={...VALES_DEF};
+  if(s.inicial.credito==null)s.inicial.credito=0;
+  if(!s.tc)s.tc={...TC_DEF};
   if(!s.cats||!s.cats.length)s.cats=CATS_DEF.slice();
   if(!s.movs)s.movs=[];
   if(!s.deuda)s.deuda={...DEUDA_DEF};
@@ -311,15 +335,31 @@ function qDespues(n){
 // ---------- cálculos ----------
 function saldoFondo(id){return S.movs.reduce((s,m)=>m.fondo!==id?s:s+(m.tipo==='traspaso'||m.tipo==='apartado'?m.monto:m.tipo==='gasto'?-m.monto:0),0);}
 function saldos(){
-  let san=S.inicial.santander||0, bb=S.inicial.bbva||0, va=S.inicial.vales||0;
+  let san=S.inicial.santander||0, bb=S.inicial.bbva||0, va=S.inicial.vales||0, tc=S.inicial.credito||0; // tc = lo que debes
   for(const m of S.movs){
     if(m.tipo==='apartado')continue;
-    if(m.tipo==='traspaso'){san-=m.monto;bb+=m.monto;}
-    else{const d=m.tipo==='ingreso'?m.monto:-m.monto; if(m.cuenta==='bbva')bb+=d; else if(m.cuenta==='vales')va+=d; else san+=d;}
+    if(m.tipo==='traspaso'){san-=m.monto;bb+=m.monto;continue;}
+    if(m.tipo==='pagotdc'){san-=m.monto;tc-=m.monto;continue;}
+    if(m.cuenta==='credito'){tc+=m.tipo==='gasto'?m.monto:-m.monto;continue;}
+    const d=m.tipo==='ingreso'?m.monto:-m.monto; if(m.cuenta==='bbva')bb+=d; else if(m.cuenta==='vales')va+=d; else san+=d;
   }
   const enFondos=FONDOS.filter(f=>!f.sinFondo&&f.cuenta!=='santander').reduce((s,f)=>s+Math.max(0,saldoFondo(f.id)),0);
   const reservado=FONDOS.filter(f=>f.cuenta==='santander').reduce((s,f)=>s+Math.max(0,saldoFondo(f.id)),0);
-  return {san,bb,va,libre:bb-enFondos,reservado};
+  return {san,bb,va,tc,libre:bb-enFondos,reservado,disponible:san-reservado-Math.max(0,tc)};
+}
+// tarjeta de crédito: ventana de pago y uso del mes
+function tcInfo(){
+  const d=new Date(), dia=d.getDate(), corte=Math.min(31,Math.max(1,S.tc.corte||1));
+  const mesK=hoy().slice(0,7);
+  const gastosMes=S.movs.filter(m=>m.cuenta==='credito'&&m.tipo==='gasto'&&m.fecha.slice(0,7)===mesK);
+  const compraOk=gastosMes.some(m=>m.monto>=(S.tc.min||0));
+  // ventana: desde el día siguiente al corte, 20 días
+  const desde=new Date(d.getFullYear(),d.getMonth(),corte+1);
+  if(desde>d)desde.setMonth(desde.getMonth()-1);
+  const hasta=new Date(desde);hasta.setDate(hasta.getDate()+19);
+  const enVentana=d>=desde&&d<=hasta;
+  const fmt=x=>`${x.getDate()} ${MESES[x.getMonth()]}`;
+  return {compraOk,gastosMes,enVentana,desde,hasta,fmt};
 }
 function deuda(){
   const D=S.deuda, pagos=S.movs.filter(m=>m.fondo==='mama'&&m.tipo==='gasto');
@@ -388,9 +428,22 @@ function renderQuincena(){
 
   const s=saldos();
   document.getElementById('saldos').innerHTML=`
-    <div class="saldo-card"><small>Santander · nómina</small><b class="num">${mx(s.san)}</b>${s.reservado>0?`<div class="libre num">${mx(s.reservado)} reservados para el muro</div>`:''}</div>
+    <div class="saldo-card"><small>Santander · libre</small><b class="num">${mx(s.disponible)}</b><div class="sub num">${mx(s.san)} en la cuenta${s.reservado>0?` · ${mx(s.reservado)} para el muro`:''}${s.tc>0?` · ${mx(s.tc)} para la tarjeta`:''}</div></div>
     <div class="saldo-card"><small>BBVA · ahorros</small><b class="num">${mx(s.bb)}</b><div class="libre num">${mx(s.libre)} sin comprometer</div></div>
-    <div class="saldo-card vales"><small>Vales · crédito T3B<em>solo para comprar en la tienda</em></small><b class="num">${mx(s.va)}</b></div>`;
+    <div class="saldo-card vales"><small>Vales · crédito T3B<em>solo para comprar en la tienda</em></small><b class="num">${mx(s.va)}</b></div>
+    ${(()=>{const t=tcInfo();const debe=s.tc>0;
+      return `<div class="saldo-card credito">
+        <div class="head"><small>Tarjeta Santander · debes</small><b class="num ${debe?'':'ok'}">${debe?'−'+mx(s.tc):'$0'}</b></div>
+        <div class="uso ${t.compraOk?'ok':'warn'}">${t.compraOk?`Uso del mes cubierto (${t.gastosMes.length} compra${t.gastosMes.length===1?'':'s'})`:`Falta una compra de ${mx(S.tc.min)} o más este mes`}</div>
+        ${debe?`<button class="pagar ${t.enVentana?'':'calm'}" id="btn-pagar-tc">${t.enVentana?`Pagar tarjeta · ${mx(s.tc)} de Santander`:`Pagar tarjeta (ventana del ${t.fmt(t.desde)} al ${t.fmt(t.hasta)})`}</button>`:''}
+      </div>`;})()}`;
+  const bp=document.getElementById('btn-pagar-tc');
+  if(bp)bp.onclick=()=>{
+    const monto=saldos().tc;if(monto<=0)return;
+    if(!confirm(`¿Registrar el pago de ${mx(monto)} de Santander a la tarjeta?`))return;
+    S.movs.push({id:uid(),fecha:hoy(),tipo:'pagotdc',cuenta:'santander',monto,cat:'Pago tarjeta',nota:'Santander → tarjeta'});
+    toast(`${mx(monto)} pagados · tarjeta en ceros`);save();
+  };
   document.getElementById('fondos').innerHTML=FONDOS.filter(f=>!f.sinFondo).map(f=>{
     const sal=saldoFondo(f.id);
     let extra='';
@@ -418,6 +471,10 @@ function renderForm(){
   sv.className='save '+({gasto:'spend',ingreso:'income',traspaso:'set'}[F.tipo]);
   sv.textContent={gasto:'Guardar gasto',ingreso:'Guardar ingreso',traspaso:'Pasar a BBVA'}[F.tipo];
   document.getElementById('f-cuenta').parentElement.style.display=F.tipo==='traspaso'?'none':'flex';
+  // la tarjeta solo recibe gastos
+  const bC=document.querySelector('#f-cuenta button[data-v="credito"]');
+  bC.style.display=F.tipo==='gasto'?'':'none';
+  if(F.tipo!=='gasto'&&F.cuenta==='credito'){F.cuenta='santander';document.querySelectorAll('#f-cuenta button').forEach(x=>x.classList.toggle('on',x.dataset.v==='santander'));}
 }
 seg('f-tipo','tipo',renderForm);seg('f-cuenta','cuenta');
 document.getElementById('f-fecha').value=hoy();
@@ -438,8 +495,8 @@ function renderMovs(){
   for(const m of list){
     if(m.fecha!==last){last=m.fecha;html+=`<div class="day">${new Date(m.fecha+'T12:00').toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'})}</div>`;}
     const sign=m.tipo==='gasto'?'−':m.tipo==='ingreso'?'+':m.tipo==='apartado'?'◦':'→';
-    const cls=m.fondo==='mama'?'deuda':m.cuenta==='vales'?'vales':m.tipo;
-    html+=`<div class="mov"><span class="t"><b>${m.cat}${m.nota?' · '+m.nota:''}</b><small>${m.tipo==='traspaso'?'Santander → BBVA':m.tipo==='apartado'?'Reservado en Santander':m.cuenta==='bbva'?'BBVA':m.cuenta==='vales'?'Vales':'Santander'}</small></span><span class="a num ${cls}">${sign}${mx(m.monto)}</span><button class="x" data-id="${m.id}" aria-label="Borrar">×</button></div>`;
+    const cls=m.fondo==='mama'?'deuda':m.tipo==='pagotdc'?'pagotdc':m.cuenta==='credito'?'credito':m.cuenta==='vales'?'vales':m.tipo;
+    html+=`<div class="mov"><span class="t"><b>${m.cat}${m.nota?' · '+m.nota:''}</b><small>${m.tipo==='traspaso'?'Santander → BBVA':m.tipo==='pagotdc'?'Santander → tarjeta':m.tipo==='apartado'?'Reservado en Santander':m.cuenta==='bbva'?'BBVA':m.cuenta==='vales'?'Vales':m.cuenta==='credito'?'Tarjeta de crédito':'Santander'}</small></span><span class="a num ${cls}">${sign}${mx(m.monto)}</span><button class="x" data-id="${m.id}" aria-label="Borrar">×</button></div>`;
   }
   el.innerHTML=html;
   el.querySelectorAll('.x').forEach(b=>b.onclick=()=>{if(confirm('¿Borrar este movimiento?')){S.movs=S.movs.filter(m=>m.id!==b.dataset.id);save();}});
@@ -465,6 +522,7 @@ function renderResumen(){
   document.getElementById('r-set').textContent=mx(ms.filter(m=>m.tipo==='traspaso'||m.tipo==='apartado').reduce((s,m)=>s+m.monto,0));
   document.getElementById('r-deuda').textContent=mx(ms.filter(m=>m.fondo==='mama'&&m.tipo==='gasto').reduce((s,m)=>s+m.monto,0));
   document.getElementById('r-vales').textContent=mx(gastos.filter(m=>m.cuenta==='vales').reduce((s,m)=>s+m.monto,0));
+  document.getElementById('r-credito').textContent=mx(gastos.filter(m=>m.cuenta==='credito').reduce((s,m)=>s+m.monto,0));
   document.getElementById('r-inc').textContent=mx(ms.filter(m=>m.tipo==='ingreso'&&m.cuenta!=='vales').reduce((s,m)=>s+m.monto,0));
   const byQ={};for(const m of S.movs)if(m.tipo==='gasto'&&!m.fondo){const k=qKey(m.fecha);byQ[k]=(byQ[k]||0)+m.monto;}
   const qs=Object.entries(byQ).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,8);
@@ -475,11 +533,15 @@ function renderResumen(){
 // ---------- ajustes ----------
 const sSan=document.getElementById('s-san'),sBb=document.getElementById('s-bbva'),sCats=document.getElementById('s-cats');
 const sVa=document.getElementById('s-vales'),sVm=document.getElementById('s-vales-mes');
+const sTS=document.getElementById('s-tc-saldo'),sTC=document.getElementById('s-tc-corte'),sTM=document.getElementById('s-tc-min');
 const sDT=document.getElementById('s-d-total'),sDP=document.getElementById('s-d-pago'),sDV=document.getElementById('s-d-prev');
 sSan.onchange=()=>{S.inicial.santander=parseFloat(sSan.value)||0;save();};
 sBb.onchange=()=>{S.inicial.bbva=parseFloat(sBb.value)||0;save();};
 sVa.onchange=()=>{S.inicial.vales=parseFloat(sVa.value)||0;save();};
 sVm.onchange=()=>{S.vales.mes=Math.max(0,parseFloat(sVm.value)||0);save();};
+sTS.onchange=()=>{S.inicial.credito=Math.max(0,parseFloat(sTS.value)||0);save();};
+sTC.onchange=()=>{S.tc.corte=Math.min(31,Math.max(1,parseInt(sTC.value)||1));save();};
+sTM.onchange=()=>{S.tc.min=Math.max(0,parseFloat(sTM.value)||0);save();};
 sDT.onchange=()=>{S.deuda.total=Math.max(0,parseFloat(sDT.value)||0);save();};
 sDP.onchange=()=>{S.deuda.porQ=Math.max(0,parseFloat(sDP.value)||0);save();};
 sDV.onchange=()=>{S.deuda.previos=Math.max(0,parseInt(sDV.value)||0);save();};
@@ -494,7 +556,7 @@ document.getElementById('s-file').onchange=e=>{
   f.text().then(t=>{try{const s=JSON.parse(t);if(!s.movs)throw 0;S=normaliza(s);save();toast('Respaldo cargado');}catch{toast('Ese archivo no es un respaldo válido');}});
 };
 document.getElementById('s-wipe').onclick=()=>{if(confirm('Se borra todo lo guardado en este teléfono. ¿Seguro?')){localStorage.removeItem(KEY);S=load();render();}};
-function renderAjustes(){sSan.value=S.inicial.santander||'';sBb.value=S.inicial.bbva||'';sVa.value=S.inicial.vales||'';sVm.value=S.vales.mes;sCats.value=S.cats.join(', ');sDT.value=S.deuda.total;sDP.value=S.deuda.porQ;sDV.value=S.deuda.previos;}
+function renderAjustes(){sSan.value=S.inicial.santander||'';sBb.value=S.inicial.bbva||'';sVa.value=S.inicial.vales||'';sVm.value=S.vales.mes;sTS.value=S.inicial.credito||'';sTC.value=S.tc.corte;sTM.value=S.tc.min;sCats.value=S.cats.join(', ');sDT.value=S.deuda.total;sDP.value=S.deuda.porQ;sDV.value=S.deuda.previos;}
 
 // ---------- tabs y render ----------
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
