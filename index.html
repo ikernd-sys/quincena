@@ -170,6 +170,7 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
   <div class="check" id="checklist"></div>
   <div class="check debt" id="checklist-deuda"></div>
   <div class="check vales" id="checklist-vales"></div>
+  <div class="check" id="checklist-papa" style="margin-top:8px"></div>
   <h2>Saldos</h2>
   <div class="saldos" id="saldos"></div>
   <h2>Deuda con mamá</h2>
@@ -235,6 +236,8 @@ nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
     <input id="s-vales" type="number" inputmode="decimal" placeholder="0">
     <label for="s-vales-mes" style="margin-top:10px">Depósito mensual de vales</label>
     <input id="s-vales-mes" type="number" inputmode="numeric">
+    <label for="s-apoyo-muro" style="margin-top:10px">Apoyo mensual de papá para el muro</label>
+    <input id="s-apoyo-muro" type="number" inputmode="numeric">
     <p class="note">Los saldos iniciales son el punto de partida: pon lo que tienes hoy en cada cuenta y a partir de ahí la app lleva la cuenta con tus movimientos. Los vales solo se gastan en T3B; cada mes palomeas el depósito en la pestaña Quincena.</p>
   </div>
   <div class="ajuste">
@@ -292,6 +295,7 @@ const FONDOS=[
 const TOTAL_Q=FONDOS.reduce((s,f)=>s+f.porQ,0);
 const DEUDA_DEF={total:25000,porQ:500,previos:14};
 const VALES_DEF={mes:1000};
+const APOYO_DEF={muro:700};
 const TC_DEF={corte:1,min:200};
 const CATS_DEF=['Café','Snacks','Gasolina','Comida','Salidas','Uber','Otro'];
 const KEY='quincena-app-v1';
@@ -302,6 +306,7 @@ function normaliza(s){
   if(!s.inicial)s.inicial={santander:0,bbva:0,vales:0};
   if(s.inicial.vales==null)s.inicial.vales=0;
   if(!s.vales)s.vales={...VALES_DEF};
+  if(!s.apoyo)s.apoyo={...APOYO_DEF};
   if(s.inicial.credito==null)s.inicial.credito=0;
   if(!s.tc)s.tc={...TC_DEF};
   if(!s.cats||!s.cats.length)s.cats=CATS_DEF.slice();
@@ -333,7 +338,7 @@ function qDespues(n){
 }
 
 // ---------- cálculos ----------
-function saldoFondo(id){return S.movs.reduce((s,m)=>m.fondo!==id?s:s+(m.tipo==='traspaso'||m.tipo==='apartado'?m.monto:m.tipo==='gasto'?-m.monto:0),0);}
+function saldoFondo(id){return S.movs.reduce((s,m)=>m.fondo!==id?s:s+(m.tipo==='traspaso'||m.tipo==='apartado'||m.tipo==='ingreso'?m.monto:m.tipo==='gasto'?-m.monto:0),0);}
 function saldos(){
   let san=S.inicial.santander||0, bb=S.inicial.bbva||0, va=S.inicial.vales||0, tc=S.inicial.credito||0; // tc = lo que debes
   for(const m of S.movs){
@@ -417,6 +422,15 @@ function renderQuincena(){
     save();
   };
 
+  // apoyo de papá para el muro (entra a Santander y queda reservado)
+  const idP=`papa-muro-${mesK}`, pOn=S.movs.some(m=>m.id===idP);
+  document.getElementById('checklist-papa').innerHTML=`<label class="${pOn?'done':''}"><input type="checkbox" id="chk-papa" ${pOn?'checked':''}><span class="t"><b>Apoyo de papá · muro</b><small>entra a Santander y se reserva para el cobro del 19</small></span><span class="amt num">${mx(S.apoyo.muro)}</span></label>`;
+  document.getElementById('chk-papa').onchange=e=>{
+    if(e.target.checked){S.movs.push({id:idP,fecha:hoy(),tipo:'ingreso',cuenta:'santander',monto:S.apoyo.muro,cat:'Apoyo papá',fondo:'muro',nota:'Muro de escalada'});toast(`${mx(S.apoyo.muro)} reservados para el muro`);}
+    else S.movs=S.movs.filter(m=>m.id!==idP);
+    save();
+  };
+
   // tarjeta de deuda
   const pct=Math.min(100,100*dd.pagado/(D.total||1));
   document.getElementById('deuda').innerHTML=`<div class="deuda">
@@ -453,7 +467,7 @@ function renderQuincena(){
   document.querySelectorAll('.fondo .use').forEach(b=>b.onclick=()=>{
     const f=FONDOS.find(x=>x.id===b.dataset.f);
     const cta=f.cuenta||'bbva';
-    const v=prompt(`¿Cuánto pagaste de ${f.nombre}? (sale de ${cta==='santander'?'Santander':'BBVA'})`,f.meta||f.porQ*2);
+    const v=prompt(`¿Cuánto pagaste de ${f.nombre}? (sale de ${cta==='santander'?'Santander':'BBVA'})`,f.id==='muro'?Math.max(0,saldoFondo('muro'))||f.porQ*2+S.apoyo.muro:f.meta||f.porQ*2);
     const n=parseFloat(v);if(!n||n<=0)return;
     S.movs.push({id:uid(),fecha:hoy(),tipo:'gasto',cuenta:cta,monto:n,cat:f.nombre,fondo:f.id,nota:'Pago del fondo'});
     toast(`${mx(n)} pagados · ${f.nombre}`);save();
@@ -496,7 +510,7 @@ function renderMovs(){
     if(m.fecha!==last){last=m.fecha;html+=`<div class="day">${new Date(m.fecha+'T12:00').toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'})}</div>`;}
     const sign=m.tipo==='gasto'?'−':m.tipo==='ingreso'?'+':m.tipo==='apartado'?'◦':'→';
     const cls=m.fondo==='mama'?'deuda':m.tipo==='pagotdc'?'pagotdc':m.cuenta==='credito'?'credito':m.cuenta==='vales'?'vales':m.tipo;
-    html+=`<div class="mov"><span class="t"><b>${m.cat}${m.nota?' · '+m.nota:''}</b><small>${m.tipo==='traspaso'?'Santander → BBVA':m.tipo==='pagotdc'?'Santander → tarjeta':m.tipo==='apartado'?'Reservado en Santander':m.cuenta==='bbva'?'BBVA':m.cuenta==='vales'?'Vales':m.cuenta==='credito'?'Tarjeta de crédito':'Santander'}</small></span><span class="a num ${cls}">${sign}${mx(m.monto)}</span><button class="x" data-id="${m.id}" aria-label="Borrar">×</button></div>`;
+    html+=`<div class="mov"><span class="t"><b>${m.cat}${m.nota?' · '+m.nota:''}</b><small>${m.tipo==='traspaso'?'Santander → BBVA':m.tipo==='pagotdc'?'Santander → tarjeta':m.tipo==='apartado'?'Reservado en Santander':m.tipo==='ingreso'&&m.fondo?'Santander · reservado':m.cuenta==='bbva'?'BBVA':m.cuenta==='vales'?'Vales':m.cuenta==='credito'?'Tarjeta de crédito':'Santander'}</small></span><span class="a num ${cls}">${sign}${mx(m.monto)}</span><button class="x" data-id="${m.id}" aria-label="Borrar">×</button></div>`;
   }
   el.innerHTML=html;
   el.querySelectorAll('.x').forEach(b=>b.onclick=()=>{if(confirm('¿Borrar este movimiento?')){S.movs=S.movs.filter(m=>m.id!==b.dataset.id);save();}});
@@ -539,6 +553,8 @@ sSan.onchange=()=>{S.inicial.santander=parseFloat(sSan.value)||0;save();};
 sBb.onchange=()=>{S.inicial.bbva=parseFloat(sBb.value)||0;save();};
 sVa.onchange=()=>{S.inicial.vales=parseFloat(sVa.value)||0;save();};
 sVm.onchange=()=>{S.vales.mes=Math.max(0,parseFloat(sVm.value)||0);save();};
+const sAp=document.getElementById('s-apoyo-muro');
+sAp.onchange=()=>{S.apoyo.muro=Math.max(0,parseFloat(sAp.value)||0);save();};
 sTS.onchange=()=>{S.inicial.credito=Math.max(0,parseFloat(sTS.value)||0);save();};
 sTC.onchange=()=>{S.tc.corte=Math.min(31,Math.max(1,parseInt(sTC.value)||1));save();};
 sTM.onchange=()=>{S.tc.min=Math.max(0,parseFloat(sTM.value)||0);save();};
@@ -556,7 +572,7 @@ document.getElementById('s-file').onchange=e=>{
   f.text().then(t=>{try{const s=JSON.parse(t);if(!s.movs)throw 0;S=normaliza(s);save();toast('Respaldo cargado');}catch{toast('Ese archivo no es un respaldo válido');}});
 };
 document.getElementById('s-wipe').onclick=()=>{if(confirm('Se borra todo lo guardado en este teléfono. ¿Seguro?')){localStorage.removeItem(KEY);S=load();render();}};
-function renderAjustes(){sSan.value=S.inicial.santander||'';sBb.value=S.inicial.bbva||'';sVa.value=S.inicial.vales||'';sVm.value=S.vales.mes;sTS.value=S.inicial.credito||'';sTC.value=S.tc.corte;sTM.value=S.tc.min;sCats.value=S.cats.join(', ');sDT.value=S.deuda.total;sDP.value=S.deuda.porQ;sDV.value=S.deuda.previos;}
+function renderAjustes(){sSan.value=S.inicial.santander||'';sBb.value=S.inicial.bbva||'';sVa.value=S.inicial.vales||'';sVm.value=S.vales.mes;sAp.value=S.apoyo.muro;sTS.value=S.inicial.credito||'';sTC.value=S.tc.corte;sTM.value=S.tc.min;sCats.value=S.cats.join(', ');sDT.value=S.deuda.total;sDP.value=S.deuda.porQ;sDV.value=S.deuda.previos;}
 
 // ---------- tabs y render ----------
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
