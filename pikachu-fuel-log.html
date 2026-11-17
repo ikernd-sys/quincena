@@ -12,8 +12,9 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23F4C430'/%3E%3Ctext x='90' y='118' font-size='86' text-anchor='middle'%3E%E2%9B%BD%3C/text%3E%3C/svg%3E">
 <style>
   :root {
-    --ink: #16213A; --yellow: #F4C430; --slate: #6B7385; --red: #C8372D;
-    --bg: #EEF1F5; --line: #D2D8E2; --card: #fff;
+    --ink: #16213A; --yellow: #F4C430; --slate: #5E6678; --red: #C8372D; --ok: #0F766E;
+    --bg: #EEF1F5; --line: #D2D8E2; --card: #fff; --grid: #E6EAF0;
+    --s1: #2a78d6; --s2: #eb6834; /* chart series: pump (real), car computer */
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--ink);
@@ -31,17 +32,17 @@
 
   .panel { background: var(--ink); border-radius: 14px; padding: 12px 16px 6px; margin-bottom: 14px; }
   .panel .cap { font-size: 12px; color: #AEB6C6; margin-bottom: 4px; }
-  .ro { display: flex; justify-content: space-between; align-items: baseline;
+  .ro { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
     padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.10); }
   .ro span:first-child { font-size: 14px; color: #AEB6C6; }
-  .ro span:last-child { font-size: 18px; font-weight: 500; color: #F5F7FA; }
+  .ro span:last-child { font-size: 18px; font-weight: 500; color: #F5F7FA; white-space: nowrap; }
   .ro.big span:last-child { font-size: 30px; font-weight: 600; color: var(--yellow); }
   .ro small { font-size: 12px; font-weight: 400; color: #AEB6C6; margin-left: 4px; }
   .panel .foot { display: flex; justify-content: space-between; font-size: 12px; color: #AEB6C6; padding: 8px 0 4px; }
 
   .hint { font-size: 14px; color: var(--slate); line-height: 1.35; margin: 0 0 14px; }
 
-  button { font: inherit; cursor: pointer; border: 0; -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; cursor: pointer; border: 0; color: inherit; -webkit-tap-highlight-color: transparent; }
   .btn-add { width: 100%; display: flex; justify-content: space-between; align-items: center;
     background: var(--yellow); color: var(--ink); border-radius: 14px; padding: 13px 16px;
     font-weight: 500; font-size: 16px; margin-bottom: 12px; }
@@ -49,10 +50,11 @@
   .btn-primary { width: 100%; background: var(--ink); color: #fff; border-radius: 8px; padding: 12px; font-weight: 500; font-size: 16px; }
   .btn-text { background: none; color: var(--slate); font-size: 14px; padding: 4px 0; display: inline-flex; gap: 6px; align-items: center; }
   .btn-text.danger { color: var(--red); }
-  button:focus-visible, input:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+  button:focus-visible, input:focus-visible, svg:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
 
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-  .card h2 { font-size: 14px; margin: 0 0 8px; font-weight: 500; }
+  .card h2 { font-size: 15px; margin: 0 0 2px; font-weight: 600; }
+  .card .sub { font-size: 13px; color: var(--slate); margin: 0 0 10px; line-height: 1.35; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   .sect { font-size: 14px; font-weight: 500; margin: 14px 0 8px; }
@@ -66,29 +68,70 @@
   label.chk { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 8px 0; }
   label.chk input { width: 18px; height: 18px; accent-color: var(--ink); }
   .err { color: var(--red); font-size: 14px; margin: 8px 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chips button { background: var(--bg); border-radius: 16px; padding: 6px 10px; font-size: 13px; }
+  .seg { display: flex; background: var(--bg); border-radius: 9px; padding: 3px; }
+  .seg button { flex: 1; padding: 8px 0; border-radius: 7px; font-size: 14px; font-weight: 500; color: var(--slate); background: none; }
+  .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(22,33,58,.14); }
+
+  /* insights */
+  .ins { list-style: none; margin: 0; padding: 0; }
+  .ins li { padding: 10px 0; border-top: 1px solid var(--grid); font-size: 14px; line-height: 1.4; }
+  .ins li:first-child { border-top: 0; padding-top: 4px; }
+  .ins b { font-weight: 600; }
+  .ins .k { display: block; font-size: 12px; color: var(--slate); margin-bottom: 1px; }
+
+  /* charts */
+  .viz { position: relative; }
+  .viz svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+  .legend { display: flex; gap: 16px; font-size: 13px; color: var(--slate); margin: 0 0 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 0; border-top: 2px solid; display: inline-block; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: #fff; border-radius: 8px;
+    padding: 7px 9px; font-size: 12px; line-height: 1.35; min-width: 120px; max-width: 200px; z-index: 2;
+    box-shadow: 0 2px 8px rgba(22,33,58,.25); }
+  .tip[hidden] { display: none; }
+  .tip .h { color: #AEB6C6; margin-bottom: 3px; }
+  .tip .r { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+  .tip .r i { width: 10px; height: 0; border-top: 2px solid; flex: 0 0 auto; }
+  .tip .r span { flex: 1; color: #AEB6C6; }
+  .tip .r b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .note { font-size: 12px; color: var(--slate); line-height: 1.4; margin: 8px 0 0; }
+
+  /* tables */
+  table.t { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.t th { text-align: right; font-weight: 500; font-size: 12px; color: var(--slate); padding: 4px 0 6px; }
+  table.t th:first-child, table.t td:first-child { text-align: left; }
+  table.t td { padding: 8px 0; border-top: 1px solid var(--grid); text-align: right; font-variant-numeric: tabular-nums; }
+  table.t td:first-child { padding-right: 8px; }
+  table.t .flag { color: var(--red); font-weight: 600; }
+  table.t .mute { color: var(--slate); }
+  .kv2 { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; font-size: 14px; }
+  .kv2 span:nth-child(odd) { color: var(--slate); }
+  .kv2 span:nth-child(even) { text-align: right; font-weight: 500; }
 
   .hist-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .hist-head h2 { font-size: 14px; margin: 0; font-weight: 500; }
+  .hist-head h2 { font-size: 15px; margin: 0; font-weight: 600; }
   .entry { background: var(--card); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 8px; overflow: hidden; }
   .entry .top { width: 100%; text-align: left; background: none; padding: 12px 16px; color: var(--ink); }
-  .entry .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .entry .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .entry .row.sub { font-size: 14px; color: var(--slate); margin-top: 2px; }
-  .entry .stats { display: flex; gap: 16px; font-size: 14px; margin-top: 6px; }
+  .entry .stats { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; margin-top: 6px; }
   .entry .stats i { font-style: normal; color: var(--slate); }
-  .entry .stats .bad { color: var(--red); }
+  .entry .stats .bad { color: var(--red); font-weight: 600; }
   .entry .detail { border-top: 1px solid var(--bg); padding: 12px 16px 12px; font-size: 14px; }
   .entry .detail .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
   .entry .detail .kv span:nth-child(odd) { color: var(--slate); }
   .entry .detail .notes { color: var(--slate); margin-top: 8px; line-height: 1.35; }
+  .entry .detail .acts { display: flex; gap: 18px; margin-top: 10px; }
+  .tagp { font-size: 11px; background: var(--bg); border-radius: 6px; padding: 1px 6px; margin-left: 6px; color: var(--slate); white-space: nowrap; }
 
   .backup { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 18px; }
   .foot-note { font-size: 12px; color: var(--slate); line-height: 1.4; margin-top: 18px; }
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
     background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0;
-    transition: opacity .2s; pointer-events: none; }
+    transition: opacity .2s; pointer-events: none; z-index: 5; }
   .toast.show { opacity: 1; }
-  .chart svg { width: 100%; height: auto; display: block; }
-  .legend { font-size: 12px; color: var(--slate); margin-top: 6px; }
   @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
 </style>
 </head>
@@ -102,13 +145,14 @@
   <div class="panel" id="panel"></div>
   <p class="hint" id="hint" hidden></p>
 
-  <button class="btn-add" id="toggleForm"><span>＋ Add fill-up</span><span id="chev">▾</span></button>
+  <button class="btn-add" id="toggleForm"><span id="formTitle">＋ Add fill-up</span><span id="chev">▾</span></button>
 
   <div class="card" id="form" hidden>
     <div class="grid2">
       <label class="f"><span class="lab"><b>Date</b></span><input type="date" id="date"></label>
-      <label class="f"><span class="lab"><b>Station</b></span><input type="text" id="station" placeholder="Name or corner"></label>
+      <label class="f"><span class="lab"><b>Station</b></span><input type="text" id="station" placeholder="Name or corner" autocomplete="off"></label>
     </div>
+    <div class="chips" id="stationChips"></div>
     <div class="sect">Receipt</div>
     <div class="grid3">
       <label class="f"><span class="lab"><b>$/L</b></span><input type="text" inputmode="decimal" id="pricePerL"></label>
@@ -117,24 +161,54 @@
     </div>
     <div class="sect">Dashboard (photo before pumping)</div>
     <div class="grid2">
-      <label class="f"><span class="lab"><b>Odometer</b><i>km total</i></span><input type="text" inputmode="numeric" id="odometer" placeholder="196242"></label>
-      <label class="f"><span class="lab"><b>Viaje 1</b><i>km</i></span><input type="text" inputmode="decimal" id="tripKm" placeholder="793.0"></label>
-      <label class="f"><span class="lab"><b>Consumo med.</b><i>l/100 km</i></span><input type="text" inputmode="decimal" id="avgComputer" placeholder="10.5"></label>
-      <label class="f"><span class="lab"><b>Cons. combust.</b><i>L</i></span><input type="text" inputmode="decimal" id="computerLiters" placeholder="83.72"></label>
+      <label class="f"><span class="lab"><b>Odometer</b><i>km total</i></span><input type="text" inputmode="numeric" id="odometer" placeholder="198468"></label>
+      <label class="f"><span class="lab"><b>Viaje 1</b><i>km</i></span><input type="text" inputmode="decimal" id="tripKm" placeholder="342.2"></label>
+      <label class="f"><span class="lab"><b>Consumo med.</b><i>l/100 km</i></span><input type="text" inputmode="decimal" id="avgComputer" placeholder="14.0"></label>
+      <label class="f"><span class="lab"><b>Cons. combust.</b><i>L</i></span><input type="text" inputmode="decimal" id="computerLiters" placeholder="48.16"></label>
       <label class="f"><span class="lab"><b>Dist. p/ vacío</b><i>km</i></span><input type="text" inputmode="numeric" id="distToEmpty" placeholder="60"></label>
-      <label class="f"><span class="lab"><b>Tiempo viaje</b><i>h:mm:ss</i></span><input type="text" id="tripTime" placeholder="17:03:03"></label>
+      <label class="f"><span class="lab"><b>Tiempo viaje</b><i>h:mm:ss</i></span><input type="text" id="tripTime" placeholder="14:48:23"></label>
     </div>
-    <label class="chk"><input type="checkbox" id="fullTank" checked> Filled to full (pump clicked off)</label>
+    <div class="sect">Who held the pump</div>
+    <div class="seg" id="filledBy"><button data-v="me">Me</button><button data-v="dad">Dad</button><button data-v="other">Someone else</button></div>
+    <div class="sect">Paid with</div>
+    <div class="seg" id="paidWith"><button data-v="debit">Debit</button><button data-v="credit">Credit</button><button data-v="cash">Cash</button><button data-v="dad">Dad paid</button></div>
+    <label class="chk" style="margin-top:14px"><input type="checkbox" id="fullTank" checked> Filled to full (stopped at the first click)</label>
     <label class="chk"><input type="checkbox" id="tripReset" checked> Viaje 1 was reset at the previous fill-up</label>
     <label class="f"><span class="lab"><b>Notes</b></span><input type="text" id="notes" placeholder="Highway trip, AC all day…"></label>
     <div class="err" id="err" hidden></div>
     <button class="btn-primary" id="save" style="margin-top:10px">Save fill-up</button>
+    <button class="btn-text" id="cancelEdit" hidden style="margin-top:8px">Cancel edit</button>
   </div>
 
-  <div class="card chart" id="chartCard" hidden>
-    <h2>Consumption, real vs car computer</h2>
-    <div id="chart"></div>
-    <div class="legend">Yellow is what you actually paid for; dashed grey is what the dashboard claims.</div>
+  <div class="card" id="insCard" hidden>
+    <h2>What your tanks say</h2>
+    <ul class="ins" id="ins"></ul>
+  </div>
+
+  <div class="card" id="chartA" hidden>
+    <h2>Consumption per tank</h2>
+    <p class="sub">L/100 km between fill-ups. Pump is liters you paid for; car is what the dashboard reported.</p>
+    <div class="legend"><span><i style="border-color:var(--s1)"></i>Pump (real)</span><span><i style="border-color:var(--s2)"></i>Car computer</span></div>
+    <div class="viz" id="vizA"></div>
+  </div>
+
+  <div class="card" id="chartB" hidden>
+    <h2 id="chartBTitle">Consumption follows traffic</h2>
+    <p class="sub">Each dot is one tank: the car's reported L/100 km against that tank's average speed, stops included. The line is the best fit.</p>
+    <div class="viz" id="vizB"></div>
+    <p class="note" id="fitNote"></p>
+  </div>
+
+  <div class="card" id="stCard" hidden>
+    <h2>Pump vs car, by station and by who filled</h2>
+    <p class="sub">Liters charged minus liters the car says it burned, added up over all tanks in each row. A station is only judged after three fills.</p>
+    <table class="t" id="stTable"></table>
+    <table class="t" id="whoTable" style="margin-top:14px"></table>
+  </div>
+
+  <div class="card" id="budCard" hidden>
+    <h2>What driving costs</h2>
+    <div class="kv2 num" id="bud" style="margin-top:8px"></div>
   </div>
 
   <div class="hist-head">
@@ -149,7 +223,7 @@
     <input type="file" id="fileIn" accept="application/json,.json" hidden>
   </div>
 
-  <p class="foot-note">Data lives only on this phone. Real consumption is liters pumped over km driven between two full tanks (odometer if logged, otherwise Viaje 1). "Pump vs car" is liters the station charged minus liters the car says it burned since the last fill; a positive gap over about 5% is worth checking with PROFECO's Litro por Litro.</p>
+  <p class="foot-note">Data lives only on this phone. Real consumption is liters pumped over km driven between two full tanks; km come from Viaje 1 when it was reset at the previous fill, otherwise from the odometer. "Pump vs car" compares liters charged with liters the car says it burned. Trip computers usually read 3–8% low, so what matters is one station or one habit standing out from the rest; a station that stays above that across several fills is worth checking with PROFECO's Litro por Litro.</p>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -163,10 +237,19 @@
     fullTank: true, tripReset: false,
     notes: "Baseline. Viaje 1 was not reset at the previous fill (car says 83.72 L used, only 58.07 L fit), so no full-to-full number yet. Odometer approximate."
   }];
+  const WHO = { me: "Me", dad: "Dad", other: "Someone else" };
+  const PAID = { debit: "Debit", credit: "Credit", cash: "Cash", dad: "Dad paid" };
 
   // ---------- storage ----------
+  // Older entries carried who filled / how it was paid only in the notes; read it from there once.
+  function infer(e) {
+    const t = String(e.notes || "");
+    if (e.filledBy === undefined && /\b(dad|pap[aá])\b/i.test(t)) { e.filledBy = "dad"; if (e.paidWith === undefined) e.paidWith = "dad"; }
+    if (e.paidWith === undefined && /cr[eé]dit/i.test(t)) e.paidWith = "credit";
+    return e;
+  }
   function load() {
-    try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    try { const raw = localStorage.getItem(KEY); if (raw) { const a = JSON.parse(raw); if (Array.isArray(a)) return a.map(infer); } } catch (e) {}
     return null;
   }
   function save(list) {
@@ -178,9 +261,14 @@
 
   // ---------- math ----------
   const n = v => (v === "" || v === null || v === undefined || isNaN(Number(v))) ? null : Number(v);
-  const fmt = (v, d = 2) => (v === null || v === undefined) ? "—" : Number(v).toFixed(d);
-  const money = v => (v === null || v === undefined) ? "—" :
-    "$" + Number(v).toLocaleString("en-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = (v, d = 2) => (v === null || v === undefined || isNaN(v)) ? "—" : Number(v).toFixed(d);
+  const sgn = (v, d = 1) => (v === null || v === undefined) ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+  const money = (v, d = 2) => (v === null || v === undefined || isNaN(v)) ? "—" :
+    "$" + Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const hours = t => { const m = /^(\d+):(\d{1,2})(?::(\d{1,2}))?$/.exec(String(t || "").trim()); return m ? (+m[1]) + (+m[2]) / 60 + (+(m[3] || 0)) / 3600 : null; };
+  const dayNum = iso => Math.round(new Date(iso + "T12:00").getTime() / 864e5);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const shortDate = iso => new Date(iso + "T12:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
   function compute(list) {
     const sorted = list.slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
@@ -189,130 +277,348 @@
       const liters = n(e.liters);
       const total = n(e.total) ?? (liters && n(e.pricePerL) ? liters * n(e.pricePerL) : null);
       const price = n(e.pricePerL) ?? (liters && total ? total / liters : null);
-      let kmSince = null;
-      if (prev && n(e.odometer) && n(prev.odometer) && n(e.odometer) > n(prev.odometer)) kmSince = n(e.odometer) - n(prev.odometer);
-      else if (e.tripReset && n(e.tripKm)) kmSince = n(e.tripKm);
+      // Viaje 1 is exact once it was reset at the previous fill; the odometer is the fallback.
+      const odoKm = prev && n(e.odometer) && n(prev.odometer) && n(e.odometer) > n(prev.odometer) ? n(e.odometer) - n(prev.odometer) : null;
+      const tripOk = e.tripReset && n(e.tripKm);
+      const kmSince = tripOk ? n(e.tripKm) : odoKm;
+      const kmMismatch = tripOk && odoKm && Math.abs(odoKm - n(e.tripKm)) > Math.max(5, 0.03 * n(e.tripKm)) ? odoKm - n(e.tripKm) : null;
       const fullToFull = !!(prev && e.fullTank && prev.fullTank && kmSince && liters);
       const realL100 = fullToFull ? liters / kmSince * 100 : null;
       const kmPerL = fullToFull ? kmSince / liters : null;
       const costPerKm = fullToFull && total ? total / kmSince : null;
-      const pumpDiff = fullToFull && e.tripReset && n(e.computerLiters) ? liters - n(e.computerLiters) : null;
-      const pumpDiffPct = pumpDiff !== null ? pumpDiff / n(e.computerLiters) * 100 : null;
-      const computerGap = realL100 !== null && n(e.avgComputer) ? n(e.avgComputer) - realL100 : null;
-      return Object.assign({}, e, { total, price, kmSince, fullToFull, realL100, kmPerL, costPerKm, pumpDiff, pumpDiffPct, computerGap });
+      const cl = n(e.computerLiters);
+      const pumpDiff = fullToFull && e.tripReset && cl ? liters - cl : null;
+      const pumpDiffPct = pumpDiff !== null ? pumpDiff / cl * 100 : null;
+      const h = hours(e.tripTime);
+      const speed = n(e.tripKm) && h ? n(e.tripKm) / h : null;
+      const days = prev ? dayNum(e.date) - dayNum(prev.date) : null;
+      return Object.assign({}, e, { liters, total, price, kmSince, kmMismatch, fullToFull, realL100, kmPerL, costPerKm, cl, pumpDiff, pumpDiffPct, speed, days,
+        who: e.filledBy || "me", paid: e.paidWith || "debit" });
     });
+  }
+
+  function linreg(pts) { // pts: [[x,y],...]
+    const m = pts.length; if (m < 4) return null;
+    const mx = pts.reduce((s, p) => s + p[0], 0) / m, my = pts.reduce((s, p) => s + p[1], 0) / m;
+    let sxx = 0, sxy = 0, syy = 0;
+    for (const [x, y] of pts) { sxx += (x - mx) ** 2; sxy += (x - mx) * (y - my); syy += (y - my) ** 2; }
+    if (!sxx || !syy) return null;
+    const b = sxy / sxx, a = my - b * mx;
+    return { a, b, r2: (sxy * sxy) / (sxx * syy), n: m };
+  }
+
+  function stats(rows) {
+    const ftf = rows.filter(r => r.fullToFull);
+    const km = ftf.reduce((s, r) => s + r.kmSince, 0), L = ftf.reduce((s, r) => s + r.liters, 0), cost = ftf.reduce((s, r) => s + (r.total || 0), 0);
+    const gapRows = ftf.filter(r => r.pumpDiff !== null);
+    const sum = (a, f) => a.reduce((s, r) => s + f(r), 0);
+    const gapOf = a => { const c = sum(a, r => r.cl); return c ? { n: a.length, liters: sum(a, r => r.pumpDiff), pct: sum(a, r => r.pumpDiff) / c * 100 } : null; };
+    const group = key => { const g = {}; for (const r of gapRows) (g[key(r)] = g[key(r)] || []).push(r); return g; };
+    const byStation = Object.entries(group(r => (r.station || "Unnamed").trim())).map(([name, a]) => ({ name, gap: gapOf(a), l100: sum(a, r => r.liters) / sum(a, r => r.kmSince) * 100 }))
+      .sort((x, y) => y.gap.n - x.gap.n || x.name.localeCompare(y.name));
+    const byWho = Object.entries(group(r => r.who)).map(([who, a]) => ({ who, gap: gapOf(a) }));
+    const fit = linreg(rows.filter(r => r.speed && n(r.avgComputer)).map(r => [r.speed, n(r.avgComputer)]));
+    const span = rows.length > 1 ? dayNum(rows[rows.length - 1].date) - dayNum(rows[0].date) : 0;
+    const mine = sum(ftf.filter(r => r.paid !== "dad"), r => r.total || 0);
+    const bigFill = Math.max(0, ...rows.map(r => r.liters || 0));
+    return { ftf, km, L, cost, real: km ? L / km * 100 : null, carAvg: km && gapRows.length === ftf.length ? sum(ftf, r => r.cl) / km * 100 : null,
+      gap: gapOf(gapRows), byStation, byWho, fit, span, mine, bigFill,
+      kmDay: span ? km / span : null, costDay: span ? cost / span : null, fillEvery: span && ftf.length ? span / ftf.length : null };
   }
 
   // ---------- helpers ----------
   const $ = id => document.getElementById(id);
-  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   let toastTimer;
   function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1800); }
   const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  const el = (tag, cls, text) => { const x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; };
 
-  let expanded = null;
+  let expanded = null, editing = null;
+  const FORM = { filledBy: "me", paidWith: "debit" };
 
   // ---------- render ----------
   function render() {
-    const rows = compute(entries);
-    const latest = rows.length ? rows[rows.length - 1] : null;
-    const lastReal = rows.slice().reverse().find(r => r.realL100 !== null) || null;
-    const spent = rows.reduce((s, r) => s + (r.total || 0), 0);
-    const liters = rows.reduce((s, r) => s + (n(r.liters) || 0), 0);
+    const rows = compute(entries), st = stats(rows);
+    const last = rows.slice().reverse().find(r => r.realL100 !== null) || null;
 
-    const pump = lastReal && lastReal.pumpDiff !== null
-      ? (lastReal.pumpDiff > 0 ? "+" : "") + fmt(lastReal.pumpDiff, 2) + "<small>L (" + fmt(lastReal.pumpDiffPct, 1) + "%)</small>"
-      : "—<small>L</small>";
     $("panel").innerHTML =
-      '<div class="cap">' + (lastReal ? "Last full-to-full · " + esc(lastReal.date) : "No full-to-full reading yet") + '</div>' +
-      '<div class="ro big"><span>Real consumption</span><span class="num">' + fmt(lastReal && lastReal.realL100, 1) + '<small>l/100 km</small></span></div>' +
-      '<div class="ro"><span>Car\'s Consumo med.</span><span class="num">' + fmt(latest && n(latest.avgComputer), 1) + '<small>l/100 km</small></span></div>' +
-      '<div class="ro"><span>Cost per km</span><span class="num">' + money(lastReal && lastReal.costPerKm) + '</span></div>' +
-      '<div class="ro"><span>Pump vs car</span><span class="num">' + pump + '</span></div>' +
-      '<div class="foot"><span>' + rows.length + ' fill-up' + (rows.length === 1 ? "" : "s") + '</span><span class="num">' + liters.toFixed(1) + ' L · ' + money(spent) + '</span></div>';
+      '<div class="cap">' + (st.ftf.length ? "All " + st.ftf.length + " tank" + (st.ftf.length === 1 ? "" : "s") + " · " + fmt(st.km, 0) + " km since " + esc(shortDate(rows[0].date)) : "No full-to-full reading yet") + '</div>' +
+      '<div class="ro big"><span>Real consumption</span><span class="num">' + fmt(st.real, 1) + '<small>l/100 km</small></span></div>' +
+      '<div class="ro"><span>Last tank' + (last ? " · " + esc(shortDate(last.date)) : "") + '</span><span class="num">' + fmt(last && last.realL100, 1) + '<small>l/100 km</small></span></div>' +
+      '<div class="ro"><span>Car says</span><span class="num">' + fmt(st.carAvg, 1) + '<small>l/100 km</small></span></div>' +
+      '<div class="ro"><span>Pump vs car, all tanks</span><span class="num">' + (st.gap ? sgn(st.gap.pct) + "%" : "—") + '<small>' + (st.gap ? sgn(st.gap.liters) + " L" : "") + '</small></span></div>' +
+      '<div class="ro"><span>Cost per km</span><span class="num">' + money(st.km ? st.cost / st.km : null) + '</span></div>' +
+      '<div class="foot"><span>' + rows.length + ' fill-up' + (rows.length === 1 ? "" : "s") + '</span><span class="num">' + fmt(rows.reduce((s, r) => s + (r.liters || 0), 0), 1) + ' L · ' + money(rows.reduce((s, r) => s + (r.total || 0), 0)) + '</span></div>';
 
     const hint = $("hint");
-    hint.hidden = !!lastReal;
-    hint.textContent = "The real number appears after your next fill-up. At the pump: fill to full, log it here, then hold the trip stalk to reset Viaje 1 before driving off.";
+    hint.hidden = !!st.ftf.length;
+    hint.textContent = "The real number appears after your next fill-up. At the pump: fill to the first click, log it here, then hold the trip stalk to reset Viaje 1 before driving off.";
 
-    // chart
-    const pts = rows.filter(r => r.realL100 !== null || n(r.avgComputer) !== null);
-    const cc = $("chartCard");
-    if (pts.length >= 2) { cc.hidden = false; $("chart").innerHTML = chartSvg(pts); } else cc.hidden = true;
+    renderInsights(rows, st);
+    renderCharts(rows, st);
+    renderTables(st);
+    renderBudget(rows, st);
+    renderHistory(rows, st);
+    renderStationChips(rows);
+  }
 
-    // history
+  function renderInsights(rows, st) {
+    const out = [];
+    const push = (k, html) => out.push('<li><span class="k">' + k + '</span>' + html + '</li>');
+    const sp = rows.filter(r => r.speed);
+    if (st.fit && st.fit.b < 0 && st.fit.r2 >= 0.5) {
+      const first = sp[0], lastS = sp[sp.length - 1];
+      push("Car or gas?", "Mostly traffic. Average speed went from <b>" + fmt(first.speed, 0) + " km/h</b> to <b>" + fmt(lastS.speed, 0) + " km/h</b>, and speed alone explains <b>" + fmt(st.fit.r2 * 100, 0) +
+        "%</b> of the change in what the car reports. Every 5 km/h slower costs about <b>" + fmt(-st.fit.b * 5, 1) + " L/100 km</b>.");
+    } else if (sp.length < 4) {
+      push("Car or gas?", "Log Tiempo viaje on " + (4 - sp.length) + " more tank" + (4 - sp.length === 1 ? "" : "s") + " and the app can separate traffic from the car and the gas.");
+    }
+    if (st.gap && st.gap.n >= 3) {
+      const p = st.gap.pct;
+      push("Are the pumps honest?", "Across " + st.gap.n + " tanks the pumps charged <b>" + sgn(p) + "%</b> versus what the car counted (" + sgn(st.gap.liters) + " L). " +
+        (p <= 8 ? "That sits inside the 3–8% that trip computers normally under-read, so nothing points at the stations as a group." : "That is above the 3–8% trip computers normally under-read; see which row stands out below."));
+    }
+    const me = st.byWho.find(w => w.who === "me"), dad = st.byWho.find(w => w.who === "dad");
+    if (me && dad && me.gap.n >= 2 && dad.gap.n >= 2 && dad.gap.pct - me.gap.pct > 5) {
+      push("Who holds the pump matters", "Tanks Dad filled read <b>" + sgn(dad.gap.pct) + "%</b>; yours read <b>" + sgn(me.gap.pct) + "%</b>. The likely cause is topping off after the first click, which makes that tank look thirsty and the next one look frugal. Stopping at the first click every time keeps tanks comparable.");
+    }
+    const judged = st.byStation.filter(s => s.gap.n >= 3), base = st.gap ? st.gap.pct : null;
+    const bad = judged.filter(s => base !== null && s.gap.pct - base > 4);
+    if (bad.length) push("Station to watch", bad.map(s => "<b>" + esc(s.name) + "</b> reads " + sgn(s.gap.pct) + "% over " + s.gap.n + " fills").join("; ") + ", clearly above your overall " + sgn(base) + "%.");
+    else if (st.byStation.length > 1 && judged.length < 2) push("Stations", "Your " + st.gap.n + " tanks are spread over <b>" + st.byStation.length + " station names</b>, and " + (judged.length ? "only <b>" + esc(judged[0].name) + "</b> has" : "none has") + " the three fills needed to judge it. Use one name per station (tap a chip in the form, or edit old entries) and the comparison fills in.");
+    const worst = rows.filter(r => r.speed && st.fit && n(r.avgComputer)).map(r => ({ r, over: n(r.avgComputer) - (st.fit.a + st.fit.b * r.speed) })).slice(-1)[0];
+    if (worst && st.fit && st.fit.r2 >= 0.5) {
+      push("Last tank vs its traffic", worst.over > 1
+        ? "The car reported <b>" + sgn(worst.over) + " L/100 km</b> more than its speed predicts. One tank is noise; two in a row is worth a look at tire pressure and the air filter."
+        : "The car reported " + fmt(n(worst.r.avgComputer), 1) + " L/100 km at " + fmt(worst.r.speed, 0) + " km/h; the fit expects " + fmt(st.fit.a + st.fit.b * worst.r.speed, 1) + ". Nothing unusual.");
+    }
+    $("insCard").hidden = !out.length;
+    $("ins").innerHTML = out.join("");
+  }
+
+  // ---------- charts ----------
+  const NS = "http://www.w3.org/2000/svg";
+  const S = (tag, attrs, text) => { const x = document.createElementNS(NS, tag); for (const k in attrs) x.setAttribute(k, attrs[k]); if (text !== undefined) x.textContent = text; return x; };
+  function ticks(lo, hi, want) {
+    const raw = (hi - lo) / want, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag;
+    const step = (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * mag, out = [];
+    for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6));
+    return out;
+  }
+  function tipRow(tip, color, label, value) {
+    const r = el("div", "r"); if (color) { const i = el("i"); i.style.borderColor = color; r.appendChild(i); }
+    r.appendChild(el("span", "", label)); r.appendChild(el("b", "", value)); tip.appendChild(r);
+  }
+  function placeTip(host, tip, px, py) {
+    tip.hidden = false;
+    const w = host.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+    tip.style.left = Math.max(0, Math.min(w - tw, px - tw / 2)) + "px";
+    tip.style.top = (py - th - 12 < 0 ? py + 14 : py - th - 12) + "px";
+  }
+
+  function renderCharts(rows, st) {
+    // A: consumption per tank, pump vs car
+    const pts = rows.filter(r => r.realL100 !== null);
+    $("chartA").hidden = pts.length < 2;
+    if (pts.length >= 2) {
+      const host = $("vizA"); host.innerHTML = "";
+      const W = 400, H = 210, L = 30, R = 66, T = 12, B = 26;
+      const vals = pts.flatMap(p => [p.realL100, n(p.avgComputer)]).filter(v => v !== null);
+      let lo = Math.floor(Math.min(...vals) - 0.5), hi = Math.ceil(Math.max(...vals) + 0.5);
+      const x = i => L + i * (W - L - R) / (pts.length - 1), y = v => T + (hi - v) * (H - T - B) / (hi - lo);
+      const svg = S("svg", { viewBox: "0 0 " + W + " " + H, role: "img", tabindex: "0", "aria-label": "Consumption per tank, pump versus car computer. Values are listed in History." });
+      for (const v of ticks(lo, hi, 4)) { svg.appendChild(S("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: "var(--grid)", "stroke-width": 1 })); svg.appendChild(S("text", { x: L - 6, y: y(v) + 4, "font-size": 11, fill: "var(--slate)", "text-anchor": "end" }, v)); }
+      const every = Math.ceil(pts.length / 6);
+      pts.forEach((p, i) => { if (i % every === 0 || i === pts.length - 1) svg.appendChild(S("text", { x: x(i), y: H - 8, "font-size": 11, fill: "var(--slate)", "text-anchor": i === pts.length - 1 ? "end" : "middle" }, shortDate(p.date))); });
+      const cross = S("line", { y1: T, y2: H - B, stroke: "var(--slate)", "stroke-width": 1, visibility: "hidden" }); svg.appendChild(cross);
+      const series = [["var(--s2)", p => n(p.avgComputer), "Car"], ["var(--s1)", p => p.realL100, "Pump"]];
+      const ends = [];
+      for (const [color, get, name] of series) {
+        let d = "", on = false, lastI = -1;
+        pts.forEach((p, i) => { const v = get(p); if (v === null) return; d += (on ? " L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1); on = true; lastI = i; });
+        svg.appendChild(S("path", { d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+        pts.forEach((p, i) => { const v = get(p); if (v !== null) svg.appendChild(S("circle", { cx: x(i), cy: y(v), r: 4, fill: color, stroke: "#fff", "stroke-width": 2 })); });
+        if (lastI >= 0) ends.push({ name, v: get(pts[lastI]), yy: y(get(pts[lastI])) });
+      }
+      if (ends.length === 2 && Math.abs(ends[0].yy - ends[1].yy) >= 13) for (const e of ends) svg.appendChild(S("text", { x: W - R + 8, y: e.yy + 4, "font-size": 11, fill: "var(--ink)" }, e.name + " " + fmt(e.v, 1)));
+      const tip = el("div", "tip"); tip.hidden = true;
+      const show = i => {
+        const p = pts[i]; cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+        tip.textContent = ""; tip.appendChild(el("div", "h", shortDate(p.date) + " · " + (p.station || "")));
+        tipRow(tip, "var(--s1)", "Pump", fmt(p.realL100, 1)); tipRow(tip, "var(--s2)", "Car", fmt(n(p.avgComputer), 1));
+        if (p.speed) tipRow(tip, null, "Avg speed", fmt(p.speed, 0) + " km/h");
+        const k = host.clientWidth / W; placeTip(host, tip, x(i) * k, Math.min(y(p.realL100), y(n(p.avgComputer) ?? p.realL100)) * k);
+      };
+      const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
+      const over = S("rect", { x: L - 10, y: T, width: W - L - R + 20, height: H - T - B, fill: "transparent" });
+      const near = ev => { const b = svg.getBoundingClientRect(), px = (ev.clientX - b.left) / b.width * W; let bi = 0; pts.forEach((p, i) => { if (Math.abs(x(i) - px) < Math.abs(x(bi) - px)) bi = i; }); return bi; };
+      over.addEventListener("pointermove", ev => show(near(ev))); over.addEventListener("pointerdown", ev => show(near(ev)));
+      over.addEventListener("pointerleave", hide);
+      let ki = pts.length - 1;
+      svg.addEventListener("focus", () => show(ki)); svg.addEventListener("blur", hide);
+      svg.addEventListener("keydown", ev => { if (ev.key === "ArrowLeft") { ki = Math.max(0, ki - 1); show(ki); } if (ev.key === "ArrowRight") { ki = Math.min(pts.length - 1, ki + 1); show(ki); } });
+      svg.appendChild(over); host.appendChild(svg); host.appendChild(tip);
+    }
+
+    // B: car-reported consumption vs average speed
+    const sp = rows.filter(r => r.speed && n(r.avgComputer));
+    $("chartB").hidden = sp.length < 4 || !st.fit;
+    if (sp.length >= 4 && st.fit) {
+      const host = $("vizB"); host.innerHTML = "";
+      const W = 400, H = 220, L = 30, R = 14, T = 12, B = 40;
+      const xs = sp.map(p => p.speed), ys = sp.map(p => n(p.avgComputer));
+      const xlo = Math.floor((Math.min(...xs) - 2) / 5) * 5, xhi = Math.ceil((Math.max(...xs) + 2) / 5) * 5;
+      const ylo = Math.floor(Math.min(...ys) - 0.5), yhi = Math.ceil(Math.max(...ys) + 0.5);
+      const x = v => L + (v - xlo) * (W - L - R) / (xhi - xlo), y = v => T + (yhi - v) * (H - T - B) / (yhi - ylo);
+      const svg = S("svg", { viewBox: "0 0 " + W + " " + H, role: "img", tabindex: "0", "aria-label": "Car-reported consumption against average speed for each tank, with a best-fit line." });
+      for (const v of ticks(ylo, yhi, 4)) { svg.appendChild(S("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: "var(--grid)", "stroke-width": 1 })); svg.appendChild(S("text", { x: L - 6, y: y(v) + 4, "font-size": 11, fill: "var(--slate)", "text-anchor": "end" }, v)); }
+      for (const v of ticks(xlo, xhi, 5)) svg.appendChild(S("text", { x: x(v), y: H - B + 16, "font-size": 11, fill: "var(--slate)", "text-anchor": "middle" }, v));
+      svg.appendChild(S("text", { x: (L + W - R) / 2, y: H - 6, "font-size": 11, fill: "var(--slate)", "text-anchor": "middle" }, "average speed, stops included (km/h)"));
+      const f = v => st.fit.a + st.fit.b * v, clampY = v => Math.max(ylo, Math.min(yhi, v));
+      svg.appendChild(S("line", { x1: x(xlo), y1: y(clampY(f(xlo))), x2: x(xhi), y2: y(clampY(f(xhi))), stroke: "var(--slate)", "stroke-width": 1.5 }));
+      const dots = sp.map(p => { const c = S("circle", { cx: x(p.speed), cy: y(n(p.avgComputer)), r: 4.5, fill: "var(--s1)", stroke: "#fff", "stroke-width": 2 }); svg.appendChild(c); return c; });
+      const tip = el("div", "tip"); tip.hidden = true;
+      const show = i => {
+        const p = sp[i]; dots.forEach((d, j) => d.setAttribute("r", j === i ? 6.5 : 4.5));
+        tip.textContent = ""; tip.appendChild(el("div", "h", shortDate(p.date) + " · " + (p.station || "")));
+        tipRow(tip, "var(--s1)", "Car reported", fmt(n(p.avgComputer), 1) + " L/100"); tipRow(tip, null, "Avg speed", fmt(p.speed, 1) + " km/h"); tipRow(tip, null, "Fit expects", fmt(f(p.speed), 1) + " L/100");
+        const k = host.clientWidth / W; placeTip(host, tip, x(p.speed) * k, y(n(p.avgComputer)) * k);
+      };
+      const hide = () => { tip.hidden = true; dots.forEach(d => d.setAttribute("r", 4.5)); };
+      const over = S("rect", { x: 0, y: 0, width: W, height: H - B + 4, fill: "transparent" });
+      const near = ev => { const b = svg.getBoundingClientRect(), px = (ev.clientX - b.left) / b.width * W, py = (ev.clientY - b.top) / b.width * W; let bi = 0, bd = Infinity; sp.forEach((p, i) => { const d = (x(p.speed) - px) ** 2 + (y(n(p.avgComputer)) - py) ** 2; if (d < bd) { bd = d; bi = i; } }); return bi; };
+      over.addEventListener("pointermove", ev => show(near(ev))); over.addEventListener("pointerdown", ev => show(near(ev)));
+      over.addEventListener("pointerleave", hide);
+      let ki = sp.length - 1;
+      svg.addEventListener("focus", () => show(ki)); svg.addEventListener("blur", hide);
+      svg.addEventListener("keydown", ev => { if (ev.key === "ArrowLeft") { ki = Math.max(0, ki - 1); show(ki); } if (ev.key === "ArrowRight") { ki = Math.min(sp.length - 1, ki + 1); show(ki); } });
+      svg.appendChild(over); host.appendChild(svg); host.appendChild(tip);
+      $("chartBTitle").textContent = st.fit.b < 0 && st.fit.r2 >= 0.5 ? "Consumption follows traffic" : "Consumption and speed";
+      $("fitNote").textContent = "Fit: L/100 km = " + fmt(st.fit.a, 1) + " " + (st.fit.b < 0 ? "−" : "+") + " " + fmt(Math.abs(st.fit.b), 3) + " × km/h, r² = " + fmt(st.fit.r2, 2) + " over " + st.fit.n + " tanks. Average speed is Viaje 1 km divided by Tiempo viaje, so time spent idling counts.";
+    }
+  }
+
+  function renderTables(st) {
+    $("stCard").hidden = !st.gap || st.gap.n < 2;
+    if (!st.gap) return;
+    const base = st.gap.pct;
+    const cell = (g, judge) => { const hot = judge && g.n >= 3 && g.pct - base > 4; return '<td class="' + (hot ? "flag" : g.n < 3 && judge ? "mute" : "") + '">' + sgn(g.pct) + "%" + (hot ? " ▲" : "") + "</td>"; };
+    $("stTable").innerHTML = "<thead><tr><th>Station</th><th>Fills</th><th>L/100 km</th><th>Pump vs car</th></tr></thead><tbody>" +
+      st.byStation.map(s => "<tr><td>" + esc(s.name) + "</td><td>" + s.gap.n + "</td><td>" + fmt(s.l100, 1) + "</td>" + cell(s.gap, true) + "</tr>").join("") +
+      "<tr><td><b>All tanks</b></td><td>" + st.gap.n + "</td><td>" + fmt(st.real, 1) + "</td><td><b>" + sgn(base) + "%</b></td></tr></tbody>";
+    $("whoTable").innerHTML = st.byWho.length > 1 ? "<thead><tr><th>Who filled</th><th>Fills</th><th>Liters over car</th><th>Pump vs car</th></tr></thead><tbody>" +
+      st.byWho.map(w => "<tr><td>" + esc(WHO[w.who] || w.who) + "</td><td>" + w.gap.n + "</td><td>" + sgn(w.gap.liters) + " L</td>" + cell(w.gap, false) + "</tr>").join("") + "</tbody>" : "";
+  }
+
+  function renderBudget(rows, st) {
+    $("budCard").hidden = !st.span || !st.ftf.length;
+    if (!st.span || !st.ftf.length) return;
+    const lastRow = rows[rows.length - 1], range = st.real && st.bigFill ? st.bigFill / st.real * 100 : null;
+    const lasts = range && st.kmDay ? range / st.kmDay : null;
+    let low = "—";
+    if (lasts && lastRow.fullTank) { const d = new Date(lastRow.date + "T12:00"); d.setDate(d.getDate() + Math.round(lasts * 0.8)); low = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }); }
+    const q = 365.25 / 24;
+    const kv = [
+      ["Distance", fmt(st.kmDay, 0) + " km a day"],
+      ["Fuel, everything", money(st.costDay * q, 0) + " per quincena"],
+      ["Fuel you paid", money(st.mine / st.span * q, 0) + " per quincena"],
+      ["Fuel per month", money(st.costDay * 365.25 / 12, 0)],
+      ["A fill-up", "every " + fmt(st.fillEvery, 0) + " days, " + money(st.cost / st.ftf.length, 0) + " on average"],
+      ["A full tank", range ? "≈ " + fmt(range, 0) + " km, ≈ " + fmt(lasts, 0) + " days" : "—"],
+      ["Getting low around", low]
+    ];
+    $("bud").innerHTML = kv.map(([k, v]) => "<span>" + k + "</span><span>" + esc(v) + "</span>").join("");
+  }
+
+  function renderHistory(rows, st) {
     $("history").innerHTML = rows.slice().reverse().map(r => {
       const open = expanded === r.id;
-      const pumpStat = r.pumpDiff !== null
-        ? '<span class="' + (Math.abs(r.pumpDiffPct) > 5 ? "bad" : "") + '"><i>pump </i>' + (r.pumpDiff > 0 ? "+" : "") + fmt(r.pumpDiff, 1) + ' L</span>' : "";
-      const gap = r.computerGap !== null ? (r.computerGap > 0 ? "+" : "") + fmt(r.computerGap, 1) + " l/100" : "—";
+      const pumpStat = r.pumpDiff !== null ? '<span class="' + (st.gap && r.pumpDiffPct - st.gap.pct > 6 ? "bad" : "") + '"><i>pump </i>' + sgn(r.pumpDiffPct) + '%</span>' : "";
+      const exp = st.fit && r.speed ? st.fit.a + st.fit.b * r.speed : null;
+      const tags = (r.who !== "me" ? '<span class="tagp">' + esc(WHO[r.who] || r.who) + ' filled</span>' : "") + (r.paid === "credit" ? '<span class="tagp">credit</span>' : r.paid === "dad" ? '<span class="tagp">Dad paid</span>' : r.paid === "cash" ? '<span class="tagp">cash</span>' : "");
       return '<div class="entry">' +
-        '<button class="top" data-id="' + esc(r.id) + '">' +
-          '<div class="row"><span><b>' + esc(r.date) + '</b></span><span class="num"><b>' + money(r.total) + '</b></span></div>' +
-          '<div class="row sub"><span>' + esc(r.station) + '</span><span class="num">' + fmt(n(r.liters), 2) + ' L @ ' + money(r.price) + '</span></div>' +
-          '<div class="stats num"><span><i>real </i>' + fmt(r.realL100, 1) + '</span><span><i>car </i>' + fmt(n(r.avgComputer), 1) + '</span><span><i>$/km </i>' + fmt(r.costPerKm, 2) + '</span>' + pumpStat + '</div>' +
+        '<button class="top" data-id="' + esc(r.id) + '" aria-expanded="' + open + '">' +
+          '<div class="row"><span><b>' + esc(shortDate(r.date)) + '</b>' + tags + '</span><span class="num"><b>' + money(r.total) + '</b></span></div>' +
+          '<div class="row sub"><span>' + esc(r.station) + '</span><span class="num">' + fmt(r.liters, 2) + ' L @ ' + money(r.price) + '</span></div>' +
+          '<div class="stats num"><span><i>real </i>' + fmt(r.realL100, 1) + '</span><span><i>car </i>' + fmt(n(r.avgComputer), 1) + '</span><span><i>$/km </i>' + fmt(r.costPerKm, 2) + '</span>' + (r.speed ? '<span><i>km/h </i>' + fmt(r.speed, 0) + '</span>' : "") + pumpStat + '</div>' +
         '</button>' +
         (open ? '<div class="detail"><div class="kv num">' +
           '<span>Odometer</span><span>' + esc(r.odometer || "—") + ' km</span>' +
           '<span>Viaje 1</span><span>' + esc(r.tripKm || "—") + ' km</span>' +
-          '<span>km since last fill</span><span>' + (r.kmSince ?? "—") + '</span>' +
+          '<span>km used for the math</span><span>' + (r.kmSince ?? "—") + (r.kmMismatch ? " (odometer says " + sgn(r.kmMismatch, 0) + ")" : "") + '</span>' +
+          '<span>Days since last fill</span><span>' + (r.days ?? "—") + '</span>' +
           '<span>Cons. combust.</span><span>' + esc(r.computerLiters || "—") + ' L</span>' +
-          '<span>Dist. p/ vacío</span><span>' + esc(r.distToEmpty || "—") + ' km</span>' +
+          '<span>Pump minus car</span><span>' + (r.pumpDiff !== null ? sgn(r.pumpDiff, 2) + " L" : "—") + '</span>' +
           '<span>Tiempo viaje</span><span>' + esc(r.tripTime || "—") + '</span>' +
+          '<span>Average speed</span><span>' + (r.speed ? fmt(r.speed, 1) + " km/h" : "—") + '</span>' +
+          '<span>Fit expects</span><span>' + (exp !== null ? fmt(exp, 1) + " l/100 (car said " + fmt(n(r.avgComputer), 1) + ")" : "—") + '</span>' +
           '<span>km per liter</span><span>' + fmt(r.kmPerL, 2) + '</span>' +
-          '<span>Car vs real gap</span><span>' + gap + '</span>' +
-          '<span>Full tank</span><span>' + (r.fullTank ? "yes" : "no") + '</span>' +
-          '<span>Trip reset before</span><span>' + (r.tripReset ? "yes" : "no") + '</span>' +
+          '<span>Dist. p/ vacío</span><span>' + esc(r.distToEmpty || "—") + ' km</span>' +
+          '<span>Filled by / paid</span><span>' + esc(WHO[r.who] || r.who) + " / " + esc(PAID[r.paid] || r.paid) + '</span>' +
+          '<span>Full tank / trip reset</span><span>' + (r.fullTank ? "yes" : "no") + " / " + (r.tripReset ? "yes" : "no") + '</span>' +
           '</div>' + (r.notes ? '<div class="notes">' + esc(r.notes) + '</div>' : "") +
-          '<button class="btn-text danger" data-del="' + esc(r.id) + '" style="margin-top:10px">🗑 Delete this fill-up</button></div>' : "") +
+          '<div class="acts"><button class="btn-text" data-edit="' + esc(r.id) + '">✎ Edit</button><button class="btn-text danger" data-del="' + esc(r.id) + '">🗑 Delete</button></div></div>' : "") +
       '</div>';
     }).join("");
   }
 
-  function chartSvg(pts) {
-    const W = 400, H = 170, L = 34, R = 10, T = 10, B = 26;
-    const vals = pts.flatMap(p => [p.realL100, n(p.avgComputer)]).filter(v => v !== null);
-    let lo = Math.min(...vals), hi = Math.max(...vals);
-    if (hi - lo < 1) { lo -= 1; hi += 1; } lo = Math.floor(lo) - 0.5; hi = Math.ceil(hi) + 0.5;
-    const x = i => L + (pts.length === 1 ? 0 : i * (W - L - R) / (pts.length - 1));
-    const y = v => T + (hi - v) * (H - T - B) / (hi - lo);
-    const path = key => { let d = "", on = false; pts.forEach((p, i) => { const v = key === "real" ? p.realL100 : n(p.avgComputer); if (v === null) return; d += (on ? " L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1); on = true; }); return d; };
-    let g = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Consumption trend">';
-    for (let v = Math.ceil(lo); v <= hi; v++) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '" stroke="#EEF1F5"/><text x="' + (L - 6) + '" y="' + (y(v) + 4).toFixed(1) + '" font-size="11" fill="#6B7385" text-anchor="end">' + v + '</text>';
-    g += '<path d="' + path("car") + '" fill="none" stroke="#6B7385" stroke-width="1.5" stroke-dasharray="4 3"/>';
-    g += '<path d="' + path("real") + '" fill="none" stroke="#F4C430" stroke-width="3" stroke-linejoin="round"/>';
-    pts.forEach((p, i) => { if (p.realL100 !== null) g += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.realL100).toFixed(1) + '" r="3.5" fill="#F4C430"/>'; g += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 8) + '" font-size="11" fill="#6B7385" text-anchor="middle">' + esc(p.date.slice(5)) + '</text>'; });
-    return g + "</svg>";
+  function renderStationChips(rows) {
+    const seen = [], box = $("stationChips");
+    for (const r of rows.slice().reverse()) { const s = (r.station || "").trim(); if (s && !seen.includes(s)) seen.push(s); }
+    box.textContent = "";
+    seen.slice(0, 6).forEach(s => { const b = el("button", "", s); b.type = "button"; b.onclick = () => { $("station").value = s; }; box.appendChild(b); });
   }
 
   // ---------- form ----------
   const fields = ["date", "station", "pricePerL", "liters", "total", "odometer", "tripKm", "avgComputer", "computerLiters", "distToEmpty", "tripTime", "notes"];
+  function setSeg(id, v) { FORM[id] = v; document.querySelectorAll("#" + id + " button").forEach(b => b.classList.toggle("on", b.dataset.v === v)); }
+  ["filledBy", "paidWith"].forEach(id => document.querySelectorAll("#" + id + " button").forEach(b => b.onclick = () => { setSeg(id, b.dataset.v); if (id === "filledBy" && b.dataset.v === "me" && FORM.paidWith === "dad") setSeg("paidWith", "debit"); }));
   function resetForm() {
+    editing = null;
     fields.forEach(f => $(f).value = "");
-    $("date").value = today(); $("station").value = "Next to home (Magna)"; $("pricePerL").value = "23.99";
+    const rows = compute(entries), last = rows[rows.length - 1];
+    $("date").value = today(); $("station").value = last ? last.station || "" : ""; $("pricePerL").value = last && last.price ? fmt(last.price, 2) : "23.99";
     $("fullTank").checked = true; $("tripReset").checked = true; $("err").hidden = true;
+    setSeg("filledBy", "me"); setSeg("paidWith", "debit");
+    $("save").textContent = "Save fill-up"; $("formTitle").textContent = "＋ Add fill-up"; $("cancelEdit").hidden = true;
   }
+  function openForm(open) { $("form").hidden = !open; $("chev").textContent = open ? "▴" : "▾"; }
   resetForm();
 
-  $("toggleForm").addEventListener("click", () => { const f = $("form"); f.hidden = !f.hidden; $("chev").textContent = f.hidden ? "▾" : "▴"; if (!f.hidden) $("liters").focus(); });
+  $("toggleForm").addEventListener("click", () => { const willOpen = $("form").hidden; if (!willOpen && editing) resetForm(); openForm(willOpen); if (willOpen) $("liters").focus(); });
+  $("cancelEdit").addEventListener("click", () => { resetForm(); openForm(false); });
   ["liters", "pricePerL"].forEach(id => $(id).addEventListener("input", () => { const l = n($("liters").value), p = n($("pricePerL").value); if (l && p) $("total").value = (l * p).toFixed(2); }));
   $("total").addEventListener("input", () => { const l = n($("liters").value), t = n($("total").value); if (l && t) $("pricePerL").value = (t / l).toFixed(2); });
 
+  function startEdit(id) {
+    const e = entries.find(x => x.id === id); if (!e) return;
+    editing = id;
+    fields.forEach(f => $(f).value = e[f] ?? "");
+    $("fullTank").checked = !!e.fullTank; $("tripReset").checked = !!e.tripReset;
+    setSeg("filledBy", e.filledBy || "me"); setSeg("paidWith", e.paidWith || "debit");
+    $("save").textContent = "Save changes"; $("formTitle").textContent = "Editing " + shortDate(e.date); $("cancelEdit").hidden = false; $("err").hidden = true;
+    openForm(true); $("toggleForm").scrollIntoView({ block: "start" });
+  }
+
   $("save").addEventListener("click", () => {
-    const e = { id: "e-" + Date.now() };
+    const e = editing ? Object.assign({}, entries.find(x => x.id === editing)) : { id: "e-" + Date.now() };
     fields.forEach(f => e[f] = $(f).value.trim());
-    e.fullTank = $("fullTank").checked; e.tripReset = $("tripReset").checked;
+    e.fullTank = $("fullTank").checked; e.tripReset = $("tripReset").checked; e.filledBy = FORM.filledBy; e.paidWith = FORM.paidWith;
     const err = $("err");
     if (!n(e.liters)) { err.textContent = "Liters loaded is required."; err.hidden = false; return; }
     if (!n(e.total) && !n(e.pricePerL)) { err.textContent = "Enter the total charged or the price per liter."; err.hidden = false; return; }
+    if (e.tripTime && hours(e.tripTime) === null) { err.textContent = "Write Tiempo viaje as hours:minutes:seconds, for example 14:48:23."; err.hidden = false; return; }
     if (!e.date) e.date = today();
-    entries.push(e); save(entries); resetForm(); $("form").hidden = true; $("chev").textContent = "▾";
-    render(); toast("Fill-up saved");
+    const was = editing;
+    if (was) entries = entries.map(x => x.id === was ? e : x); else entries.push(e);
+    save(entries); resetForm(); openForm(false); render(); toast(was ? "Changes saved" : "Fill-up saved");
   });
 
   $("history").addEventListener("click", ev => {
     const del = ev.target.closest("[data-del]");
-    if (del) { if (confirm("Delete this fill-up?")) { entries = entries.filter(e => e.id !== del.dataset.del); save(entries); expanded = null; render(); toast("Deleted"); } return; }
+    if (del) { if (confirm("Delete this fill-up?")) { entries = entries.filter(e => e.id !== del.dataset.del); save(entries); expanded = null; if (editing === del.dataset.del) { resetForm(); openForm(false); } render(); toast("Deleted"); } return; }
+    const ed = ev.target.closest("[data-edit]");
+    if (ed) { startEdit(ed.dataset.edit); return; }
     const top = ev.target.closest("[data-id]");
     if (top) { expanded = expanded === top.dataset.id ? null : top.dataset.id; render(); }
   });
@@ -324,9 +630,10 @@
   }
   function csv() {
     const rows = compute(entries);
-    const head = ["date", "station", "price_per_l", "liters", "total_mxn", "odometer_km", "viaje_km", "consumo_med_l100", "cons_combust_l", "dist_vacio_km", "tiempo_viaje", "full_tank", "trip_reset", "real_l100", "km_per_l", "cost_per_km", "pump_minus_car_l", "notes"];
+    const head = ["date", "station", "price_per_l", "liters", "total_mxn", "odometer_km", "viaje_km", "km_used", "consumo_med_l100", "cons_combust_l", "dist_vacio_km", "tiempo_viaje", "avg_speed_kmh", "days_since_last", "filled_by", "paid_with", "full_tank", "trip_reset", "real_l100", "km_per_l", "cost_per_km", "pump_minus_car_l", "pump_vs_car_pct", "notes"];
     const q = s => '"' + String(s ?? "").replace(/"/g, '""') + '"';
-    return [head.join(",")].concat(rows.map(r => [r.date, q(r.station), fmt(r.price), r.liters, fmt(r.total), r.odometer, r.tripKm, r.avgComputer, r.computerLiters, r.distToEmpty, r.tripTime, r.fullTank, r.tripReset, fmt(r.realL100), fmt(r.kmPerL), fmt(r.costPerKm), fmt(r.pumpDiff), q(r.notes)].join(","))).join("\n");
+    const v = (x, d) => x === null || x === undefined ? "" : Number(x).toFixed(d);
+    return [head.join(",")].concat(rows.map(r => [r.date, q(r.station), v(r.price, 2), r.liters, v(r.total, 2), r.odometer, r.tripKm, r.kmSince ?? "", r.avgComputer, r.computerLiters, r.distToEmpty, r.tripTime, v(r.speed, 1), r.days ?? "", r.who, r.paid, r.fullTank, r.tripReset, v(r.realL100, 2), v(r.kmPerL, 2), v(r.costPerKm, 2), v(r.pumpDiff, 2), v(r.pumpDiffPct, 1), q(r.notes)].join(","))).join("\n");
   }
   $("copyCsv").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(csv()); toast("CSV copied"); }
@@ -343,8 +650,8 @@
         if (!Array.isArray(data)) throw new Error();
         const ids = new Set(entries.map(e => e.id));
         let added = 0;
-        data.forEach(e => { if (e && e.id && !ids.has(e.id)) { entries.push(e); ids.add(e.id); added++; } });
-        save(entries); render(); toast(added + " fill-up" + (added === 1 ? "" : "s") + " restored");
+        data.forEach(e => { if (e && e.id && !ids.has(e.id)) { entries.push(infer(e)); ids.add(e.id); added++; } });
+        save(entries); resetForm(); render(); toast(added + " fill-up" + (added === 1 ? "" : "s") + " restored");
       } catch (e) { toast("That file is not a Pikachu backup."); }
       ev.target.value = "";
     };
